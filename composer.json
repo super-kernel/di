@@ -1,0 +1,21 @@
+{
+    "name": "skernl/di",
+    "description": "This component is used to manage class dependencies and complete automatic injection.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Skernl\\Di\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "wheakerd",
+            "email": "wheakerd@qq.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "psr/container": "2.0.2"
+    }
+}
