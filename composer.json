@@ -1,0 +1,25 @@
+{
+    "name": "super-kernel/di",
+    "type": "library",
+    "require": {
+        "nikic/php-parser": "^5.3"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "SuperKernel\\Di\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "wheakerd",
+            "email": "wheakerd@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
