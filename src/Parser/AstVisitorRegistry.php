@@ -37,16 +37,16 @@ final class AstVisitorRegistry
                 return parent::insert($value, [$priority, $this->priority--]);
             }
 
-            public function toArray(): array
-            {
-                $array = [];
-
-                foreach (clone $this as $item) {
-                    $array[] = $item;
-                }
-
-                return $array;
-            }
+//            public function toArray(): array
+//            {
+//                $array = [];
+//
+//                foreach (clone $this as $item) {
+//                    $array[] = $item;
+//                }
+//
+//                return $array;
+//            }
         };
     }
 }

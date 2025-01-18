@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Parser;
 
 use PhpParser\Node;
+use PhpParser\Node\Stmt\Expression;
 use PhpParser\NodeVisitorAbstract;
 
 /**
@@ -23,11 +24,5 @@ class MethodHandlerVisitor extends NodeVisitorAbstract
 
     public function leaveNode(Node $node)
     {
-        if ($node instanceof Node\Stmt\ClassMethod) {
-
-            foreach ($node->stmts as $stmt) {
-                var_dump($stmt);
-            }
-        }
     }
 }

@@ -38,13 +38,12 @@ class Ast
         $code = $this->getCodeByClassName($className);
         $stmts = $this->astParser->parse($code);
         $traverser = new NodeTraverser();
-        $visitorMetadata = new VisitorMetadata($className);
+        $visitorMetadata = new VisitorMetadata($stmts);
         $queue = clone AstVisitorRegistry::getQueue();
         foreach ($queue as $string) {
             $visitor = new $string($visitorMetadata);
             $traverser->addVisitor($visitor);
         }
-
         $modifiedStmts = $traverser->traverse($stmts);
         return $this->printer->prettyPrintFile($modifiedStmts);
     }

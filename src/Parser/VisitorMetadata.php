@@ -3,22 +3,38 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Parser;
 
-use PhpParser\Node;
+use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\Declare_;
+use PhpParser\Node\Stmt\Namespace_;
 
-class VisitorMetadata
+/**
+ * @VisitorMetadata
+ * @\SuperKernel\Di\Parser\VisitorMetadata
+ */
+final class VisitorMetadata
 {
-    public bool $hasConstructor = false;
+    public bool $isFinalClassType = false;
 
-    public ?Node\Stmt\ClassMethod $constructorNode = null;
+    public string $simpleClassName;
 
-    public ?bool $hasExtends = null;
+    protected ClassLike $classLikes;
 
     /**
-     * The class name of \PhpParser\Node\Stmt\ClassLike.
+     * @param Stmt[] $stmts
      */
-    public ?string $classLike = null;
-
-    public function __construct(public string $className)
+    public function __construct(public array $stmts)
     {
+//        var_dump(
+//            $stmts
+//        );
+//        foreach ($stmts as $stmt) {
+//            if ($stmt instanceof Namespace_) {
+//                foreach ($stmt->stmts as $node) {
+//                    var_dump($node);
+//                    //                    if ($node instanceof Declare_) {}
+//                }
+//            }
+//        }
     }
 }
