@@ -9,8 +9,8 @@ use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use PhpParser\PrettyPrinterAbstract;
-use SuperKernel\Di\Parser\AstVisitorRegistry;
-use SuperKernel\Di\Parser\VisitorMetadata;
+use SuperKernel\Di\Aop\Visitor\AstVisitorRegistry;
+use SuperKernel\Di\Aop\Visitor\VisitorMetadata;
 
 /**
  * @Ast

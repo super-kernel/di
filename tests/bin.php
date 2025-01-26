@@ -2,46 +2,40 @@
 declare(strict_types=1);
 
 use SuperKernel\Di\Aop\Ast;
-use SuperKernel\Di\Parser\AstVisitorRegistry;
-use SuperKernel\Di\Parser\ClassHandlerVisitor;
-use SuperKernel\Di\Parser\MethodHandlerVisitor;
-
+use SuperKernel\Di\Aop\Visitor\AstVisitorRegistry;
+use SuperKernel\Di\Aop\Visitor\ClassHandlerVisitor;
 use Tests\TestCase;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+!defined('BASE_PATH') && define('BASE_PATH', dirname(__DIR__));
 
-//class TestCase
-//{
-//    protected object $instance;
-//
-//    public function __construct(array $config)
-//    {
-//        $this->instance = new class (...func_get_args()) {
-//            public function __construct(public array $config)
-//            {
-//                var_dump(__METHOD__);
-//            }
-//
-//            public function action()
-//            {
-//            }
-//        };
-//    }
-//}
-//
-//new TestCase([]);
-//
-//die;
+$runtime = new \parallel\Runtime();
 
-$code = file_get_contents(__DIR__ . '/TestCase.php');
+$future = $runtime->run(function () {
 
-if (!AstVisitorRegistry::exists(ClassHandlerVisitor::class)) {
-    AstVisitorRegistry::insert(ClassHandlerVisitor::class);
-}
+    require_once __DIR__ . '/../vendor/autoload.php';
 
-$proxyCode = new Ast();
-$newCode = $proxyCode->proxy(TestCase::class);
+    $code = file_get_contents(__DIR__ . '/TestCase.php');
 
-var_dump($newCode);
+    if (!AstVisitorRegistry::exists(ClassHandlerVisitor::class)) {
+        AstVisitorRegistry::insert(ClassHandlerVisitor::class);
+    }
 
-file_put_contents(__DIR__ . '/runtime/TestCase.php', $newCode);
+    $proxyCode = new Ast();
+    $newCode = $proxyCode->proxy(TestCase::class);
+
+//    var_dump($newCode);
+
+    file_put_contents(__DIR__ . '/runtime/TestCase.php', $newCode);
+    var_dump(class_exists(TestCase::class));
+
+    return new \ReflectionClass(TestCase::class);
+});
+
+/**
+ * @var ReflectionClass $value
+ */
+$value = $future->value();
+
+var_dump($value->getFileName());
+
+var_dump('类：', class_exists(TestCase::class));

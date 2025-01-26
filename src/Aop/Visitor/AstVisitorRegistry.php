@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Parser;
+namespace SuperKernel\Di\Aop\Visitor;
 
 use SplPriorityQueue;
 use const PHP_INT_MAX;
@@ -36,17 +36,6 @@ final class AstVisitorRegistry
             {
                 return parent::insert($value, [$priority, $this->priority--]);
             }
-
-//            public function toArray(): array
-//            {
-//                $array = [];
-//
-//                foreach (clone $this as $item) {
-//                    $array[] = $item;
-//                }
-//
-//                return $array;
-//            }
         };
     }
 }

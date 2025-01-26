@@ -1,12 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Parser;
+namespace SuperKernel\Di\Aop\Visitor;
 
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassLike;
-use PhpParser\Node\Stmt\Declare_;
-use PhpParser\Node\Stmt\Namespace_;
 
 /**
  * @VisitorMetadata
