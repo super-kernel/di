@@ -1,0 +1,58 @@
+{
+    "name": "super-kernel/di",
+    "type": "library",
+    "license": "MIT",
+    "scripts": {
+        "classes": [
+            "@composer dump-autoload -o"
+        ],
+        "test": [
+            "@composer dump-autoload -o",
+            "/www/server/php/84/bin/php tests/bin.php"
+        ]
+    },
+    "autoload": {
+        "psr-4": {
+            "SuperKernel\\Di\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "nikic/php-parser": "^5.3",
+        "super-kernel/contract": "^1.0"
+    },
+    "authors": [
+        {
+            "name": "wheakerd",
+            "email": "wheakerd@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "extra": {
+        "super-kernel": {
+            "config": "SuperKernel\\Di\\ConfigProvider"
+        }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://repo.packagist.org"
+        },
+        {
+            "type": "composer",
+            "url": "https://mirrors.aliyun.com/composer/"
+        },
+        {
+            "type": "composer",
+            "url": "https://mirrors.tencent.com/composer/"
+        },
+        {
+            "type": "composer",
+            "url": "https://repo.huaweicloud.com/repository/php/"
+        }
+    ]
+}
