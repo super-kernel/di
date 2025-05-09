@@ -9,6 +9,8 @@ namespace SuperKernel\Di\Interface;
  */
 interface ComposerInterface
 {
+	public function getDependencies(): array;
+
 	public function getRootPath(): string;
 
 	public function getVendorDir(): string;

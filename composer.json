@@ -22,7 +22,7 @@
         }
     },
     "require": {
-        "nikic/php-parser": "^5.3",
+        "nikic/php-parser": "^5.4",
         "super-kernel/contract": "^1.0"
     },
     "authors": [

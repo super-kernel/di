@@ -11,4 +11,13 @@ use Psr\Container\ContainerInterface;
  */
 interface ContainerFactoryInterface
 {
+	public function __construct(?ComposerInterface $composer = null);
+
+	/**
+	 * In principle, this method will not throw exceptions unless the creation process of the container is taken over
+	 * by an external party.
+	 *
+	 * @return ContainerInterface
+	 */
+	public function __invoke(): ContainerInterface;
 }
