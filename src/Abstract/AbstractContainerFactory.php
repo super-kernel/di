@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Abstract;
 
 use Psr\Container\ContainerInterface;
+use SuperKernel\Contract\ComposerInterface;
 use SuperKernel\Di\ConfigProvider;
 use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
-use SuperKernel\Di\Interface\ComposerInterface;
 use SuperKernel\Di\Interface\ContainerFactoryInterface;
 use SuperKernel\Di\Interface\DefinitionFactoryInterface;
 use SuperKernel\Di\Interface\ResolverInterface;
@@ -49,12 +49,5 @@ abstract class AbstractContainerFactory implements ContainerFactoryInterface
 	 *
 	 * @return array
 	 */
-	protected function getDependencies(): array
-	{
-		if (null === $this->composer) {
-			return new ConfigProvider()()['dependencies'];
-		}
-
-		return $this->composer->getMergedExtra('super-kernel')['dependencies'] ?? [];
-	}
+	abstract protected function getDependencies(): array;
 }

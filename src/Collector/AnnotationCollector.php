@@ -12,4 +12,9 @@ use SuperKernel\Di\Abstract\AbstractCollector;
 final class AnnotationCollector extends AbstractCollector
 {
 	protected static array $collectors = [];
+
+	public function getCollector()
+	{
+
+	}
 }

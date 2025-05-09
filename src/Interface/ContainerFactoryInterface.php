@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Interface;
 
 use Psr\Container\ContainerInterface;
+use SuperKernel\Contract\ComposerInterface;
 
 /**
  * @ContainerFactoryInterface
