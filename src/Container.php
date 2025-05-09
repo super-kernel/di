@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di;
 
-use Psr\Container\ContainerInterface;
+use Psr\Container\ContainerInterface as PsrContainerInterface;
+use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Exception\NotFoundException;
 use SuperKernel\Di\Interface\ContainerFactoryInterface;
 use SuperKernel\Di\Interface\DefinitionFactoryInterface;
@@ -27,8 +28,9 @@ final class Container implements ContainerInterface
 		$this->resolverDispatcher = $containerFactory->getResolverDispatcher($this);
 
 		$this->resolverEntries = [
-			self::class               => $this,
-			ContainerInterface::class => $this,
+			self::class                  => $this,
+			ContainerInterface::class    => $this,
+			PsrContainerInterface::class => $this,
 		];
 	}
 

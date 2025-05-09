@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di;
 
-use Psr\Container\ContainerInterface;
 use SuperKernel\Di\Aop\ScannerHandler\ScanHandlerFactory;
 use SuperKernel\Di\Interface\ScanHandlerInterface;
 
@@ -17,7 +16,6 @@ final class ConfigProvider
 	{
 		return [
 			'dependencies' => [
-				ContainerInterface::class   => Container::class,
 				ScanHandlerInterface::class => ScanHandlerFactory::class,
 			],
 		];
