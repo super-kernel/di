@@ -55,6 +55,6 @@ abstract class AbstractContainerFactory implements ContainerFactoryInterface
 			return new ConfigProvider()()['dependencies'];
 		}
 
-		return $this->composer->getMergedExtra('dependencies');
+		return $this->composer->getMergedExtra('super-kernel')['dependencies'] ?? [];
 	}
 }
