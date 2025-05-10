@@ -30,6 +30,16 @@ final readonly class ParameterResolver implements ResolverInterface
 
 	/**
 	 * @param DefinitionInterface $definition
+	 *
+	 * @return bool
+	 */
+	public function support(DefinitionInterface $definition): bool
+	{
+		return $definition instanceof ParameterDefinition;
+	}
+
+	/**
+	 * @param DefinitionInterface $definition
 	 * @param array               $parameters
 	 *
 	 * @return array

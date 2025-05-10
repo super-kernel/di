@@ -22,6 +22,16 @@ final readonly class FactoryResolver implements ResolverInterface
 	}
 
 	/**
+	 * @param DefinitionInterface $definition
+	 *
+	 * @return bool
+	 */
+	public function support(DefinitionInterface $definition): bool
+	{
+		return $definition instanceof FactoryDefinition;
+	}
+
+	/**
 	 * @param FactoryDefinition $definition
 	 * @param array             $parameters
 	 *

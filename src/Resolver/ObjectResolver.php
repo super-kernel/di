@@ -25,6 +25,16 @@ final readonly class ObjectResolver implements ResolverInterface
 
 	/**
 	 * @param DefinitionInterface $definition
+	 *
+	 * @return bool
+	 */
+	public function support(DefinitionInterface $definition): bool
+	{
+		return $definition instanceof ObjectDefinition;
+	}
+
+	/**
+	 * @param DefinitionInterface $definition
 	 * @param array               $parameters
 	 *
 	 * @return object

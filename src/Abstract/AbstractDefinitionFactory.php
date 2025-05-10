@@ -5,7 +5,6 @@ namespace SuperKernel\Di\Abstract;
 
 use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Definition\ObjectDefinition;
-use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Interface\DefinitionFactoryInterface;
 use SuperKernel\Di\Interface\DefinitionInterface;
 
@@ -50,15 +49,6 @@ abstract class AbstractDefinitionFactory implements DefinitionFactoryInterface
 	{
 		$className = $definition ? $definition->getClassName() : $name;
 		if (!class_exists($className) && !interface_exists($className)) {
-			if (str_contains($className, '::') && substr_count($className, '::') === 1) {
-				[
-					$class,
-					$method,
-				] = explode('::', $className);
-
-				return new ParameterDefinition($class, $method);
-			}
-
 			return $definition;
 		}
 

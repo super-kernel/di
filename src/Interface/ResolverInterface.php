@@ -9,5 +9,7 @@ namespace SuperKernel\Di\Interface;
  */
 interface ResolverInterface
 {
+	public function support(DefinitionInterface $definition): bool;
+
 	public function resolve(DefinitionInterface $definition, array $parameters = []): mixed;
 }

@@ -36,10 +36,10 @@ abstract class AbstractResolverDispatcher implements ResolverInterface
 	 */
 	public function resolve(DefinitionInterface $definition, array $parameters = []): mixed
 	{
-		$definitionClass = $definition::class;
-
-		if (isset($this->resolvers[$definitionClass])) {
-			return $this->resolvers[$definitionClass]->resolve($definition, $parameters);
+		foreach ($this->resolvers as $resolver) {
+			if ($resolver->support($definition)) {
+				return $resolver->resolve($definition, $parameters);
+			}
 		}
 
 		return $this->container->get((string)$definition);

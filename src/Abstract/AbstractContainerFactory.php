@@ -5,7 +5,6 @@ namespace SuperKernel\Di\Abstract;
 
 use Psr\Container\ContainerInterface;
 use SuperKernel\Contract\ComposerInterface;
-use SuperKernel\Di\ConfigProvider;
 use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
@@ -20,16 +19,18 @@ use SuperKernel\Di\Resolver\ParameterResolver;
  * @AbstractContainerFactory
  * @\SuperKernel\Di\Abstract\AbstractContainerFactory
  */
-abstract class AbstractContainerFactory implements ContainerFactoryInterface
+abstract readonly class AbstractContainerFactory implements ContainerFactoryInterface
 {
-	private array $resolvers = [
-		ObjectDefinition::class    => ObjectResolver::class,
-		FactoryDefinition::class   => FactoryResolver::class,
-		ParameterDefinition::class => ParameterResolver::class,
-	];
+	private array $resolvers;
 
-	public function __construct(protected readonly ?ComposerInterface $composer = null)
+	public function __construct(protected ?ComposerInterface $composer = null, array $resolvers = [])
 	{
+		$this->resolvers = array_merge(
+			[
+				ObjectDefinition::class => ObjectResolver::class,
+				                        FactoryDefinition::class => FactoryResolver::class,
+				                                    ParameterDefinition::class => ParameterResolver::class,
+			], $resolvers);
 	}
 
 	public function getDefinitionFactory(): DefinitionFactoryInterface
