@@ -6,6 +6,7 @@ namespace SuperKernel\Di\Abstract;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Interface\DefinitionInterface;
 use SuperKernel\Di\Interface\ResolverInterface;
 
@@ -24,6 +25,16 @@ abstract class AbstractResolverDispatcher implements ResolverInterface
 				$this->resolvers[$definition] = new $resolver($container, $this);
 			}
 		}
+	}
+
+	/**
+	 * @param DefinitionInterface $definition
+	 *
+	 * @return bool
+	 */
+	public function support(DefinitionInterface $definition): bool
+	{
+		return true;
 	}
 
 	/**
