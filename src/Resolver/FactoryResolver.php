@@ -7,6 +7,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Di\Definition\FactoryDefinition;
+use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Interface\DefinitionInterface;
 use SuperKernel\Di\Interface\ResolverInterface;
 
@@ -16,10 +17,7 @@ use SuperKernel\Di\Interface\ResolverInterface;
  */
 final readonly class FactoryResolver implements ResolverInterface
 {
-	/**
-	 * @param ContainerInterface $container
-	 */
-	public function __construct(private ContainerInterface $container)
+	public function __construct(private ContainerInterface $container, private ResolverInterface $resolverDispatcher)
 	{
 	}
 
@@ -35,7 +33,7 @@ final readonly class FactoryResolver implements ResolverInterface
 	{
 		$classname  = $definition->getClassname();
 		$object     = $this->container->get($classname);
-		$arguments  = $this->container->make(sprintf('%s::%s', $classname, '__invoke'), $parameters);
+		$arguments  = $this->resolverDispatcher->resolve(new ParameterDefinition($classname, '__invoke'), $parameters);
 		$parameters = array_merge($arguments, $parameters);
 
 		return $object(...$parameters);

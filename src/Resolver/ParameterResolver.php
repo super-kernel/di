@@ -47,7 +47,7 @@ final readonly class ParameterResolver implements ResolverInterface
 			);
 		}
 
-		$this->checkDeepSecurity($definition);
+		$this->checkDeepSecurity($definition->getClassname());
 
 		return $this->resolveMethodParameters($definition->getReflectionMethod(), $parameters);
 	}
@@ -115,13 +115,8 @@ final readonly class ParameterResolver implements ResolverInterface
 		return $arguments;
 	}
 
-	private function checkDeepSecurity(DefinitionInterface|string $class, array $params = []): false|array
+	private function checkDeepSecurity(string $class, array $params = []): false|array
 	{
-		if ($class instanceof DefinitionInterface) {
-			$class  = $class->getName();
-			$params = $this->checkDeepSecurity($class);
-		}
-
 		foreach (ReflectionManager::reflectClass($class)->getConstructor()?->getParameters() ?? [] as $reflectionParameter) {
 			$type = $reflectionParameter->getType();
 

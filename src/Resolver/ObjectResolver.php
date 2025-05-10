@@ -6,12 +6,10 @@ namespace SuperKernel\Di\Resolver;
 
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Exception\InvalidDefinitionException;
-use SuperKernel\Di\Interface\ContainerFactoryInterface;
 use SuperKernel\Di\Interface\DefinitionInterface;
 use SuperKernel\Di\Interface\ResolverInterface;
 
@@ -32,7 +30,6 @@ final readonly class ObjectResolver implements ResolverInterface
 	 * @return object
 	 * @throws InvalidDefinitionException
 	 * @throws ContainerExceptionInterface
-	 * @throws NotFoundExceptionInterface
 	 */
 	public function resolve(DefinitionInterface $definition, array $parameters = []): object
 	{
