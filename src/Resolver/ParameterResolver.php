@@ -57,7 +57,7 @@ final readonly class ParameterResolver implements ResolverInterface
 			);
 		}
 
-		$this->checkDeepSecurity($definition->getClassname());
+		$this->checkDeepSecurity($definition->getName());
 
 		return $this->resolveMethodParameters($definition->getReflectionMethod(), $parameters);
 	}

@@ -26,14 +26,6 @@ final class ParameterDefinition implements DefinitionInterface
 	}
 
 	/**
-	 * @return string
-	 */
-	public function getClassname(): string
-	{
-		// TODO: Implement getClassname() method.
-	}
-
-	/**
 	 * @return bool
 	 */
 	public function isInstantiable(): bool
