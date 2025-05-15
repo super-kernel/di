@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Abstract;
 
 use Psr\Container\ContainerInterface;
-use SuperKernel\Contract\ComposerInterface;
+use SuperKernel\Contract\ProviderConfigInterface;
 use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
@@ -23,7 +23,7 @@ abstract readonly class AbstractContainerFactory implements ContainerFactoryInte
 {
 	private array $resolvers;
 
-	public function __construct(protected ?ComposerInterface $composer = null, array $resolvers = [])
+	public function __construct(protected ?ProviderConfigInterface $providerConfig = null, array $resolvers = [])
 	{
 		$this->resolvers = array_merge(
 			[

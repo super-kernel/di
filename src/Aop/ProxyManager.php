@@ -6,8 +6,6 @@ namespace SuperKernel\Di\Aop;
 use Error;
 use PhpParser\Modifiers;
 use PhpParser\Node;
-use PhpParser\Node\Stmt\Function_;
-use PhpParser\NodeDumper;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
