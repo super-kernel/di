@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Aop\ScannerHandler;
+namespace SuperKernel\Di\Aop;
 
 /**
  * @Scanned

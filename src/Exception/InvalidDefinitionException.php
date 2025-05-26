@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Exception;
 
 use Psr\Container\ContainerExceptionInterface;
-use SuperKernel\Di\Interface\DefinitionInterface;
+use SuperKernel\Di\Contract\DefinitionInterface;
 use Throwable;
 
 /**

@@ -5,7 +5,6 @@ namespace SuperKernel\Di\Collector;
 
 use Composer\Autoload\ClassLoader;
 use SuperKernel\Di\Abstract\AbstractCollector;
-use SuperKernel\Di\Composer\ComposerFactory;
 
 final class ScannerCollector extends AbstractCollector
 {
@@ -60,7 +59,7 @@ final class ScannerCollector extends AbstractCollector
 	private function processAttributes(string $class, array $attributes): void
 	{
 		foreach ($attributes as $attribute) {
-			if (ReflectionManager::reflectClass($attribute->getName())->isUserDefined()) {
+			if (new ReflectionManager()->reflectClass($attribute->getName())->isUserDefined()) {
 				self::set($attribute->getName(), $class);
 			}
 		}

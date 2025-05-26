@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Interface;
+namespace SuperKernel\Di\Contract;
 
 /**
  * @DefinitionInterface
- * @\SuperKernel\Di\Interface\DefinitionInterface
+ * @\SuperKernel\Di\Contract\DefinitionInterface
  */
 interface DefinitionInterface
 {

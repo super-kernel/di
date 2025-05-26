@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Definition;
 
 use SuperKernel\Di\Collector\ReflectionManager;
-use SuperKernel\Di\Interface\DefinitionInterface;
+use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Resolver\ObjectResolver;
 
 /**
@@ -71,7 +71,7 @@ final class ObjectDefinition implements DefinitionInterface
 			return;
 		}
 
-		$this->instantiable = ReflectionManager::reflectClass($classname)->isInstantiable();
+		$this->instantiable = new ReflectionManager()->reflectClass($classname)->isInstantiable();
 	}
 
 	public function getResolver(): string

@@ -10,8 +10,8 @@ use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Exception\InvalidDefinitionException;
-use SuperKernel\Di\Interface\DefinitionInterface;
-use SuperKernel\Di\Interface\ResolverInterface;
+use SuperKernel\Di\Contract\DefinitionInterface;
+use SuperKernel\Di\Contract\ResolverInterface;
 
 /**
  * @ObjectResolver
@@ -53,6 +53,7 @@ final readonly class ObjectResolver implements ResolverInterface
 			);
 		}
 		if (!$definition->isInstantiable()) {
+			var_dump($definition);
 			throw InvalidDefinitionException::create(
 				$definition,
 				sprintf('Entry "%s" cannot be resolved: the class is not instantiable', $definition->getName()),
@@ -66,7 +67,8 @@ final readonly class ObjectResolver implements ResolverInterface
 		}
 
 		$classname       = $definition->getClassName();
-		$classReflection = ReflectionManager::reflectClass($classname);
+		var_dump($classname);
+		$classReflection = new ReflectionManager()->reflectClass($classname);
 
 		$arguments = $this->resolverDispatcher->resolve(new ParameterDefinition($classname, '__construct'), $parameters);
 

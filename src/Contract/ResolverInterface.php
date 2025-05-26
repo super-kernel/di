@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Interface;
+namespace SuperKernel\Di\Contract;
 
 /**
  * @ResolverInterface
- * @\SuperKernel\Di\Interface\ResolverInterface
+ * @\SuperKernel\Di\Contract\ResolverInterface
  */
 interface ResolverInterface
 {

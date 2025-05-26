@@ -6,9 +6,9 @@ namespace SuperKernel\Di;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Exception\NotFoundException;
-use SuperKernel\Di\Interface\ContainerFactoryInterface;
-use SuperKernel\Di\Interface\DefinitionFactoryInterface;
-use SuperKernel\Di\Interface\ResolverInterface;
+use SuperKernel\Di\Contract\ContainerFactoryInterface;
+use SuperKernel\Di\Contract\DefinitionFactoryInterface;
+use SuperKernel\Di\Contract\ResolverInterface;
 
 /**
  * @Container
@@ -67,7 +67,11 @@ final class Container implements ContainerInterface
 	 * @param array  $parameters
 	 *
 	 * @return mixed
+	 *
 	 * @throws NotFoundException
+	 *
+	 * @deprecated 2.0
+	 *
 	 */
 	public function make(string $id, array $parameters = []): mixed
 	{
@@ -78,6 +82,8 @@ final class Container implements ContainerInterface
 				sprintf('Identifier "%s" is not defined.', $id),
 			);
 		}
+
+		var_dump('$definition:', $definition);
 
 		return $this->resolverDispatcher->resolve($definition, $parameters);
 	}

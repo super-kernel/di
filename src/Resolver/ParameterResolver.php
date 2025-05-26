@@ -12,8 +12,8 @@ use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Exception\CircularDependencyException;
 use SuperKernel\Di\Exception\InvalidDefinitionException;
-use SuperKernel\Di\Interface\DefinitionInterface;
-use SuperKernel\Di\Interface\ResolverInterface;
+use SuperKernel\Di\Contract\DefinitionInterface;
+use SuperKernel\Di\Contract\ResolverInterface;
 
 /**
  * @ParameterResolver
@@ -127,7 +127,7 @@ final readonly class ParameterResolver implements ResolverInterface
 
 	private function checkDeepSecurity(string $class, array $params = []): false|array
 	{
-		foreach (ReflectionManager::reflectClass($class)->getConstructor()?->getParameters() ?? [] as $reflectionParameter) {
+		foreach (new ReflectionManager()->reflectClass($class)->getConstructor()?->getParameters() ?? [] as $reflectionParameter) {
 			$type = $reflectionParameter->getType();
 
 			if ($type?->isBuiltin()) {

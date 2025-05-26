@@ -5,7 +5,7 @@ namespace SuperKernel\Di\Definition;
 
 use ReflectionMethod;
 use SuperKernel\Di\Collector\ReflectionManager;
-use SuperKernel\Di\Interface\DefinitionInterface;
+use SuperKernel\Di\Contract\DefinitionInterface;
 
 /**
  * @ParameterDefinition
@@ -44,7 +44,7 @@ final class ParameterDefinition implements DefinitionInterface
 	public function getReflectionMethod(): ?ReflectionMethod
 	{
 		if (class_exists($this->name) && method_exists($this->name, $this->method)) {
-			return ReflectionManager::reflectMethod($this->name, $this->method);
+			return new ReflectionManager()->reflectMethod($this->name, $this->method);
 		}
 
 		return null;

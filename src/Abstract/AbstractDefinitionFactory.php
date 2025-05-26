@@ -5,8 +5,8 @@ namespace SuperKernel\Di\Abstract;
 
 use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Definition\ObjectDefinition;
-use SuperKernel\Di\Interface\DefinitionFactoryInterface;
-use SuperKernel\Di\Interface\DefinitionInterface;
+use SuperKernel\Di\Contract\DefinitionFactoryInterface;
+use SuperKernel\Di\Contract\DefinitionInterface;
 
 /**
  * @AbstractDefinitionFactory
@@ -41,6 +41,10 @@ abstract class AbstractDefinitionFactory implements DefinitionFactoryInterface
 			if ('factories' === $id && is_array($definition)) {
 				foreach ($definition as $name => $definitionFactory) {
 					if (is_string($name) && is_string($definitionFactory) && class_exists($definitionFactory)) {
+						var_dump(
+							'Factory',
+							$name, $definitionFactory,
+						);
 						$this->definitions[$name] = new FactoryDefinition($name, $definitionFactory);
 					}
 				}
@@ -53,7 +57,7 @@ abstract class AbstractDefinitionFactory implements DefinitionFactoryInterface
 
 	private function autowire(string $name, ?DefinitionInterface $definition = null): ?DefinitionInterface
 	{
-		$className = $definition ? $definition->getClassName() : $name;
+		$className = $definition?->getName() ?? $name;
 		if (!class_exists($className) && !interface_exists($className)) {
 			return $definition;
 		}

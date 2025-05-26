@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Interface;
+namespace SuperKernel\Di\Contract;
 
 use Psr\Container\ContainerInterface;
 
 /**
  * @ContainerFactoryInterface
- * @\SuperKernel\Di\Interface\ContainerFactoryInterface
+ * @\SuperKernel\Di\Contract\ContainerFactoryInterface
  */
 interface ContainerFactoryInterface
 {

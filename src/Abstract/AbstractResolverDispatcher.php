@@ -7,8 +7,8 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Di\Definition\FactoryDefinition;
-use SuperKernel\Di\Interface\DefinitionInterface;
-use SuperKernel\Di\Interface\ResolverInterface;
+use SuperKernel\Di\Contract\DefinitionInterface;
+use SuperKernel\Di\Contract\ResolverInterface;
 
 /**
  * @AbstractResolverDispatcher

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Definition;
 
-use SuperKernel\Di\Interface\DefinitionInterface;
+use SuperKernel\Di\Contract\DefinitionInterface;
 
 final class FactoryDefinition implements DefinitionInterface
 {

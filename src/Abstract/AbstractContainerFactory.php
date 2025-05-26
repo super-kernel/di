@@ -3,34 +3,44 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Abstract;
 
-use Psr\Container\ContainerInterface;
-use SuperKernel\Contract\ProviderConfigInterface;
-use SuperKernel\Di\Definition\FactoryDefinition;
-use SuperKernel\Di\Definition\ObjectDefinition;
-use SuperKernel\Di\Definition\ParameterDefinition;
-use SuperKernel\Di\Interface\ContainerFactoryInterface;
-use SuperKernel\Di\Interface\DefinitionFactoryInterface;
-use SuperKernel\Di\Interface\ResolverInterface;
-use SuperKernel\Di\Resolver\FactoryResolver;
-use SuperKernel\Di\Resolver\ObjectResolver;
-use SuperKernel\Di\Resolver\ParameterResolver;
+use Psr\Container\{
+	ContainerExceptionInterface, ContainerInterface, NotFoundExceptionInterface
+};
+use SuperKernel\Di\{
+	Container,
+	Contract\ConfigProviderInterface,
+	Contract\ScannerInterface,
+	Definition\FactoryDefinition,
+	Definition\ObjectDefinition,
+	Definition\ParameterDefinition,
+	Contract\ContainerFactoryInterface,
+	Contract\DefinitionFactoryInterface,
+	Contract\ResolverInterface,
+	Exception\NotFoundException,
+	Resolver\FactoryResolver,
+	Resolver\ObjectResolver,
+	Resolver\ParameterResolver,
+};
 
 /**
  * @AbstractContainerFactory
  * @\SuperKernel\Di\Abstract\AbstractContainerFactory
  */
-abstract readonly class AbstractContainerFactory implements ContainerFactoryInterface
+abstract class AbstractContainerFactory implements ContainerFactoryInterface
 {
-	private array $resolvers;
+	private array $resolvers = [
+		ObjectDefinition::class    => ObjectResolver::class,
+		FactoryDefinition::class   => FactoryResolver::class,
+		ParameterDefinition::class => ParameterResolver::class,
+	];
 
-	public function __construct(protected ?ProviderConfigInterface $providerConfig = null, array $resolvers = [])
+	/**
+	 * @param ConfigProviderInterface|null $configProvider
+	 * @param array<string,string>         $resolvers
+	 */
+	public function __construct(protected ?ConfigProviderInterface $configProvider = null, array $resolvers = [])
 	{
-		$this->resolvers = array_merge(
-			[
-				ObjectDefinition::class => ObjectResolver::class,
-				                        FactoryDefinition::class => FactoryResolver::class,
-				                                    ParameterDefinition::class => ParameterResolver::class,
-			], $resolvers);
+		$this->resolvers = $this->resolvers + $resolvers;
 	}
 
 	public function getDefinitionFactory(): DefinitionFactoryInterface
@@ -43,6 +53,31 @@ abstract readonly class AbstractContainerFactory implements ContainerFactoryInte
 	{
 		return new class ($container, $this->resolvers) extends AbstractResolverDispatcher implements ResolverInterface {
 		};
+	}
+
+	/**
+	 * @return ContainerInterface
+	 * @throws ContainerExceptionInterface
+	 * @throws NotFoundExceptionInterface
+	 * @throws NotFoundException
+	 */
+	final public function __invoke(): ContainerInterface
+	{
+		$container = new Container($this);
+
+		if (is_null($this->configProvider)) {
+			var_dump(
+				$container->get(ConfigProviderInterface::class)
+			);
+
+			exit();
+
+			$container = new static($container->get(ConfigProviderInterface::class))();
+			//TODO: Waiting for the scanner to intervene and complete the preliminary operation.
+			$container->get(ScannerInterface::class)->scan();
+		}
+
+		return $container;
 	}
 
 	/**

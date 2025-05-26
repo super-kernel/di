@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Interface;
+namespace SuperKernel\Di\Contract;
 
 /**
  * @DefinitionFactoryInterface
- * @\SuperKernel\Di\Interface\DefinitionFactoryInterface
+ * @\SuperKernel\Di\Contract\DefinitionFactoryInterface
  */
 interface DefinitionFactoryInterface
 {
