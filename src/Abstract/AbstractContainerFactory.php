@@ -66,12 +66,6 @@ abstract class AbstractContainerFactory implements ContainerFactoryInterface
 		$container = new Container($this);
 
 		if (is_null($this->configProvider)) {
-			var_dump(
-				$container->get(ConfigProviderInterface::class)
-			);
-
-			exit();
-
 			$container = new static($container->get(ConfigProviderInterface::class))();
 			//TODO: Waiting for the scanner to intervene and complete the preliminary operation.
 			$container->get(ScannerInterface::class)->scan();
