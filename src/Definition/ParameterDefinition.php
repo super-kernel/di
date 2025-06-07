@@ -9,7 +9,7 @@ use SuperKernel\Di\Contract\DefinitionInterface;
 
 /**
  * @ParameterDefinition
- * @\SuperKernel\Di\Definition\ParameterDefinition
+ * @\SuperKernel\Di\Definer\ParameterDefinition
  */
 final class ParameterDefinition implements DefinitionInterface
 {

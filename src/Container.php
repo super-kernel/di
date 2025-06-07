@@ -3,35 +3,20 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di;
 
-use Psr\Container\ContainerInterface as PsrContainerInterface;
 use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Exception\NotFoundException;
-use SuperKernel\Di\Contract\ContainerFactoryInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
-use SuperKernel\Di\Contract\ResolverInterface;
 
 /**
- * @Container
- * @\SuperKernel\Di\Container
+ * Containers only manage long-lived objects, and short-lived objects are managed by the caller.
  */
 final class Container implements ContainerInterface
 {
 	private array $resolverEntries = [];
 
-	private DefinitionFactoryInterface $definitionFactory;
-
-	private ResolverInterface $resolverDispatcher;
-
-	public function __construct(ContainerFactoryInterface $containerFactory)
+	public function __construct(private ?DefinitionFactoryInterface $definitionFactory = null)
 	{
-		$this->definitionFactory  = $containerFactory->getDefinitionFactory();
-		$this->resolverDispatcher = $containerFactory->getResolverDispatcher($this);
-
-		$this->resolverEntries = [
-			self::class                  => $this,
-			ContainerInterface::class    => $this,
-			PsrContainerInterface::class => $this,
-		];
+		$this->definitionFactory ??= new DefinitionFactory()();
 	}
 
 	/**
@@ -44,7 +29,15 @@ final class Container implements ContainerInterface
 			return $this->resolverEntries[$id];
 		}
 
-		return $this->resolverEntries[$id] = $this->make($id);
+		$definition = $this->definitionFactory->getDefinition($id);
+
+		if (!$definition) {
+			throw new NotFoundException(
+				sprintf('Identifier "%s" is not defined.', $id),
+			);
+		}
+
+		return $this->resolverEntries[$id] = $this->definitionFactory->getResolver($definition)->resolve($definition);
 	}
 
 	/**
@@ -83,8 +76,6 @@ final class Container implements ContainerInterface
 			);
 		}
 
-		var_dump('$definition:', $definition);
-
-		return $this->resolverDispatcher->resolve($definition, $parameters);
+		return $this->definitionFactory->getResolver($definition)->resolve($definition, $parameters);
 	}
 }

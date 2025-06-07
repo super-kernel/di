@@ -9,7 +9,7 @@ use SuperKernel\Di\Resolver\ObjectResolver;
 
 /**
  * @ObjectDefinition
- * @\SuperKernel\Di\Definition\ObjectDefinition
+ * @\SuperKernel\Di\Definer\ObjectDefinition
  */
 final class ObjectDefinition implements DefinitionInterface
 {
