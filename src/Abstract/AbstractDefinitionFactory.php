@@ -16,7 +16,7 @@ abstract class AbstractDefinitionFactory implements DefinitionFactoryInterface
 {
 	private static ?DefinitionFactoryInterface $instance = null;
 
-	private readonly ?SplPriorityQueue $definitions;
+	private readonly SplPriorityQueue $definitions;
 
 	private readonly SplPriorityQueue $resolvers;
 

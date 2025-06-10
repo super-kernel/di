@@ -6,10 +6,9 @@ namespace SuperKernel\Di\Definition;
 use SuperKernel\Di\Annotation\Definer;
 use SuperKernel\Di\Contract\DefinitionInterface;
 
-#[Definer(0)]
 final class FactoryDefinition implements DefinitionInterface
 {
-	public function __construct(private string $name, private mixed $factory)
+	public function __construct(private string $name, private mixed $factory = null)
 	{
 	}
 

@@ -1,36 +1,38 @@
 <?php
-
 declare(strict_types=1);
 
 namespace SuperKernel\Di\Collector;
 
 use InvalidArgumentException;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionMethod;
 use ReflectionProperty;
+use SuperKernel\Di\Abstract\AbstractFactory;
+use SuperKernel\Di\Annotation\Factory;
 
-/**
- * @ReflectionManager
- * @\SuperKernel\Di\Reflection\ReflectionManager
- */
-final class ReflectionManager
+#[Factory]
+final class ReflectionManager extends AbstractFactory
 {
-	private static array $collectors = [];
+	private array $classes = [];
 
-	public function reflectClass(string $classname): ReflectionClass
+	public function reflectClass(string|object $objectOrClass): ?ReflectionClass
 	{
-		if (!isset(self::$collectors['_c'][$classname])) {
-			if (class_exists($classname) || interface_exists($classname) || trait_exists($classname)) {
-				return self::$collectors['_c'][$classname] = new ReflectionClass($classname);
-			}
-			throw new InvalidArgumentException("Class $classname not exist");
+		if (isset($this->classes[$objectOrClass]) || array_key_exists($objectOrClass, $this->classes)) {
+			return $this->classes[$objectOrClass];
 		}
-		return self::$collectors['_c'][$classname];
+
+		try {
+			return $this->classes[$objectOrClass] = new ReflectionClass($objectOrClass);
+		}
+		catch (ReflectionException) {
+			return $this->classes[$objectOrClass] = null;
+		}
 	}
 
 	public function reflectInstanceWithoutConstruct(string $classname): object
 	{
-		if (!isset(self::$collectors['_instance'][$classname])) {
+		if (!isset($this->collectors['_instance'][$classname])) {
 			$classReflection = $this->reflectClass($classname);
 			if (!$classReflection->isInstantiable()) {
 				throw new InvalidArgumentException("Class $classname is not instantiable");
@@ -38,34 +40,34 @@ final class ReflectionManager
 			if ($classReflection->isInternal() && $classReflection->isFinal()) {
 				throw new InvalidArgumentException("Class $classname is internal and final");
 			}
-			return self::$collectors['_instance'][$classname] ??= $classReflection->newInstanceWithoutConstructor();
+			return $this->collectors['_instance'][$classname] ??= $classReflection->newInstanceWithoutConstructor();
 		}
-		return self::$collectors['_instance'][$classname];
+		return $this->collectors['_instance'][$classname];
 	}
 
 	public function reflectMethod(string $classname, string $methodName): ReflectionMethod
 	{
 		$method = $classname . '::' . $methodName;
-		if (!isset(self::$collectors['_m'][$method])) {
+		if (!isset($this->collectors['_m'][$method])) {
 			if ((class_exists($classname) || interface_exists($classname)) && method_exists($classname, $methodName)) {
-				return self::$collectors['_m'][$method] ??= $this->reflectClass($classname)->getMethod($methodName);
+				return $this->collectors['_m'][$method] ??= $this->reflectClass($classname)->getMethod($methodName);
 			}
 			throw new InvalidArgumentException("Class $classname dont have method $methodName");
 		}
-		return self::$collectors['_m'][$method];
+		return $this->collectors['_m'][$method];
 	}
 
 	public function reflectProperty(string $classname, string $propertyName): ReflectionProperty
 	{
 		$property = $classname . '::' . $propertyName;
-		if (!isset(self::$collectors['_p'][$property])) {
+		if (!isset($this->collectors['_p'][$property])) {
 			if (class_exists($classname) && property_exists($classname, $propertyName)) {
-				return self::$collectors['_p'][$property] ??= $this->reflectClass($classname)->getProperty(
+				return $this->collectors['_p'][$property] ??= $this->reflectClass($classname)->getProperty(
 					$propertyName,
 				);
 			}
 			throw new InvalidArgumentException("Class $classname dont have property $propertyName");
 		}
-		return self::$collectors['_p'][$property];
+		return $this->collectors['_p'][$property];
 	}
 }
