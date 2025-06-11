@@ -5,13 +5,18 @@ namespace SuperKernel\Di\Factory;
 
 use SplPriorityQueue;
 use SuperKernel\Di\Annotation\Factory;
+use SuperKernel\Di\Container;
+use SuperKernel\Di\Contract\DefinerFactoryInterface;
+use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
+use SuperKernel\Di\Definer\FactoryDefiner;
+use SuperKernel\Di\Definer\ObjectDefiner;
 
 #[Factory]
-final class DefinerFactory
+final class DefinerFactory implements DefinerFactoryInterface
 {
-	private ?SplPriorityQueue $definitions = null {
-		get => $this->definitions ??= new class extends SplPriorityQueue {
+	private ?SplPriorityQueue $definers = null {
+		get => $this->definers ??= new class extends SplPriorityQueue {
 			public function compare(mixed $priority1, mixed $priority2): int
 			{
 				return $priority2 <=> $priority1;
@@ -19,9 +24,15 @@ final class DefinerFactory
 		};
 	}
 
+	public function __construct()
+	{
+		$this->setDefiner(new FactoryDefiner());
+		$this->setDefiner(new ObjectDefiner());
+	}
+
 	public function getDefinition(string $id): ?DefinitionInterface
 	{
-		$definitions = clone $this->definitions;
+		$definitions = clone $this->definers;
 		$definitions->top();
 
 		foreach ($definitions as $definition) {
@@ -34,9 +45,9 @@ final class DefinerFactory
 		return null;
 	}
 
-	public function setDefinition(DefinitionInterface $definition, int $priority): void
+	public function setDefiner(DefinerInterface $definer, int $priority = 0): void
 	{
-		$this->definitions->insert($definition, $priority);
+		$this->definers->insert($definer, $priority);
 	}
 
 	private static ?DefinerFactory $instance = null;

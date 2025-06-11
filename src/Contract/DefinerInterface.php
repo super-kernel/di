@@ -5,5 +5,5 @@ namespace SuperKernel\Di\Contract;
 
 interface DefinerInterface
 {
-	public function __invoke(string $name);
+	public function getDefinition(string $id): ?DefinitionInterface;
 }

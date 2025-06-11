@@ -10,6 +10,7 @@ use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
+use SuperKernel\Di\Factory\ResolverFactory;
 
 /**
  * @FactoryResolver
@@ -17,8 +18,11 @@ use SuperKernel\Di\Contract\ResolverInterface;
  */
 final readonly class FactoryResolver implements ResolverInterface
 {
-	public function __construct(private ContainerInterface $container, private ResolverInterface $resolverDispatcher)
+	private ResolverInterface $resolverDispatcher;
+
+	public function __construct(private ContainerInterface $container)
 	{
+		$this->resolverDispatcher = $this->container->get(ResolverFactory::class);
 	}
 
 	/**

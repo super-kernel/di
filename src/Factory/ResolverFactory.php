@@ -4,12 +4,16 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Factory;
 
 use SplPriorityQueue;
+use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Annotation\Factory;
+use SuperKernel\Di\Container;
 use SuperKernel\Di\Contract\DefinitionInterface;
+use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
+use SuperKernel\Di\Resolver\FactoryResolver;
 
 #[Factory]
-final class ResolverFactory
+final class ResolverFactory implements ResolverFactoryInterface
 {
 	private ?SplPriorityQueue $resolvers = null {
 		get => $this->resolvers ??= new class extends SplPriorityQueue {
@@ -20,7 +24,12 @@ final class ResolverFactory
 		};
 	}
 
-	public function getResolver(DefinitionInterface $definition): ?DefinitionInterface
+	public function __construct(private readonly ContainerInterface $container)
+	{
+		$this->setResolver(new FactoryResolver($this->container));
+	}
+
+	public function getResolver(DefinitionInterface $definition): ?ResolverInterface
 	{
 		$resolvers = clone $this->resolvers;
 		$resolvers->top();
@@ -34,7 +43,7 @@ final class ResolverFactory
 		return null;
 	}
 
-	public function setResolver(ResolverInterface $resolver, int $priority): void
+	public function setResolver(ResolverInterface $resolver, int $priority = 0): void
 	{
 		$this->resolvers->insert($resolver, $priority);
 	}

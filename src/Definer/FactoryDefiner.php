@@ -7,40 +7,32 @@ use ReflectionAttribute;
 use SuperKernel\Di\Annotation\Definer;
 use SuperKernel\Di\Annotation\Factory;
 use SuperKernel\Di\Collector\ReflectionManager;
-use SuperKernel\Di\Container;
+use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Definition\FactoryDefinition;
-use SuperKernel\Di\Exception\NotFoundException;
 
 #[Definer]
-final class FactoryDefiner
+final class FactoryDefiner implements DefinerInterface
 {
 	private ReflectionManager $reflectionManager;
 
-	/**
-	 * @param Container $container
-	 *
-	 * @throws NotFoundException
-	 */
-	public function __construct(private readonly Container $container)
+	public function __construct()
 	{
-		$this->reflectionManager = $this->container->get(ReflectionManager::class);
+		$this->reflectionManager = new ReflectionManager()();
 	}
 
 	/**
-	 * @param mixed $name
+	 * @param string $id
 	 *
 	 * @return DefinitionInterface|null
 	 */
-	public function __invoke(mixed $name): ?DefinitionInterface
+	public function getDefinition(string $id): ?DefinitionInterface
 	{
-		if (is_string($name)) {
-			$attributes = $this->reflectionManager->reflectClass($name)?->getAttributes() ?? [];
+		$attributes = $this->reflectionManager->reflectClass($id)?->getAttributes() ?? [];
 
-			/* @var ReflectionAttribute $attribute */
-			if (array_any($attributes, fn($attribute) => Factory::class === $attribute->getName())) {
-				return new FactoryDefinition($name);
-			}
+		/* @var ReflectionAttribute $attribute */
+		if (array_any($attributes, fn($attribute) => Factory::class === $attribute->getName())) {
+			return new FactoryDefinition($id);
 		}
 
 		return null;
