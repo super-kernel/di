@@ -17,7 +17,8 @@ use SuperKernel\Di\Factory\ResolverFactory;
 #[Factory]
 final class Container implements ContainerInterface
 {
-	private array                    $resolverEntries;
+	private array $resolverEntries = [];
+
 	private DefinerFactoryInterface  $definerFactory;
 	private ResolverFactoryInterface $resolverFactory;
 
@@ -25,14 +26,6 @@ final class Container implements ContainerInterface
 	{
 		$this->definerFactory  = new DefinerFactory();
 		$this->resolverFactory = new ResolverFactory($this);
-
-		$this->resolverEntries = [
-			Container::class                         => $this,
-			ContainerInterface::class                => $this,
-			\Psr\Container\ContainerInterface::class => $this,
-			DefinerFactoryInterface::class           => $this->definerFactory,
-			ResolverFactoryInterface::class          => $this->resolverFactory,
-		];
 	}
 
 	/**

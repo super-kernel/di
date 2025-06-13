@@ -3,19 +3,33 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di;
 
+use RuntimeException;
 use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Annotation\Factory;
+use Throwable;
 
-/**
- * Containers only manage long-lived objects, and short-lived objects are managed by the caller.
- */
 #[Factory]
 final class ContainerFactory
 {
 	private static ?ContainerInterface $container = null;
 
+	public function __construct()
+	{
+	}
+
 	public function __invoke(): ContainerInterface
 	{
-		return self::$container ??= new Container();
+		if (self::$container) {
+			return self::$container;
+		}
+
+		//  实现额外进程开销完善所有类的扫描及注解类缓存
+
+		try {
+			return self::$container = new Container()->get(Container::class);
+		}
+		catch (Throwable $e) {
+			throw new RuntimeException($e->getMessage());
+		}
 	}
 }

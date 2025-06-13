@@ -11,9 +11,14 @@ use Composer\Autoload\ClassLoader;
  */
 interface ConfigProviderInterface
 {
-	public function get(?string $key = null, mixed $default = null): mixed;
-
 	public function getClassLoader(): ClassLoader;
 
 	public function getRootPath(): string;
+
+	public function getRootPackage(): array;
+
+	public function getAllPackages(): array;
+
+	public function getAllProviders(): array;
+
 }

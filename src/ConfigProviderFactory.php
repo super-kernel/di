@@ -7,6 +7,7 @@ use Closure;
 use Composer\Autoload\ClassLoader;
 use Composer\InstalledVersions;
 use Exception;
+use RuntimeException;
 use SuperKernel\Di\Contract\ConfigProviderInterface;
 
 /**
@@ -15,59 +16,39 @@ use SuperKernel\Di\Contract\ConfigProviderInterface;
  */
 final class ConfigProviderFactory
 {
-	private static ?self $container = null;
+	private static ?self $instance = null;
 
 	private ?ConfigProviderInterface $configProvider = null {
 		get => $this->configProvider ??= new class implements ConfigProviderInterface {
-			private ?array $configProviders = null {
-				get => $this->configProviders ??= (function () {
-					$providerConfigs = [];
+			private ?string $rootPath = null {
+				get => $this->rootPath ??= dirname(Closure::bind(fn() => $this->vendorDir, $this->classLoader, ClassLoader::class)());
+			}
 
-					$packages = array_merge(InstalledVersions::getAllRawData()[0]['versions'] ?? [], InstalledVersions::getAllRawData()[0]['root'] ?? []);
+			private ?array $rootPackage = null {
+				get => $this->rootPackage ??= InstalledVersions::getRootPackage();
+			}
 
-					foreach ($packages as $packageName => $package) {
-						$configProvider = $package['extra']['super-kernel']['config'] ?? null;
-						if ($configProvider) {
-							$providerConfigs[$packageName] = new $configProvider()();
-						}
+			private ?array $allPackages = null {
+				get => $this->allPackages ??= (function () {
+					$versions = InstalledVersions::getAllRawData()[0]['versions'] ?? null;
+
+					if (!$versions) {
+						throw new RuntimeException('All raw data are not installed');
 					}
 
-					return $providerConfigs;
+					return $this->allPackages = $versions;
 				})();
 			}
 
-			private ?array $configs = null {
-				get => $this->configs ??= (function () {
-					$configs = [];
-					foreach ($this->configProviders as $configProvider) {
-						foreach ($configProvider as $key => $value) {
-							if (is_array($value)) {
-								$configs[$key] = array_merge($configs[$key] ?? [], $value);
-							} else {
-								$configs[$key][] = $value;
-							}
-						}
-					}
+			private ?array $providerConfigs = null;
 
-					return $configs;
-				})();
-			}
+			private readonly ClassLoader $classLoader;
 
-			private ?ClassLoader $classLoader = null {
-				get => $this->classLoader ??= (function () {
-					$loaders = ClassLoader::getRegisteredLoaders();
-
-					return reset($loaders);
-				})();
-			}
-
-			public function get(?string $key = null, mixed $default = null): mixed
+			public function __construct()
 			{
-				if (is_null($key)) {
-					return $this->configs;
-				}
+				$loaders = ClassLoader::getRegisteredLoaders();
 
-				return $this->configs[$key] ?? $default;
+				$this->classLoader = reset($loaders);
 			}
 
 			public function getClassLoader(): ClassLoader
@@ -77,7 +58,53 @@ final class ConfigProviderFactory
 
 			public function getRootPath(): string
 			{
-				return dirname(Closure::bind(fn() => $this->vendorDir, $this->classLoader, ClassLoader::class)());
+				return $this->rootPath;
+			}
+
+			public function getRootPackage(): array
+			{
+				return $this->rootPackage;
+			}
+
+			public function getAllPackages(): array
+			{
+				return $this->allPackages;
+			}
+
+			public function getAllProviders(): array
+			{
+				if (null !== $this->providerConfigs) {
+					return $this->providerConfigs;
+				}
+
+				$providerConfigs = [];
+
+				$packages = array_merge($this->allPackages, $this->rootPackage);
+
+				foreach ($packages as $packageName => $package) {
+					$configProvider = $package['extra']['super-kernel']['config'] ?? null;
+
+					if (null === $configProvider) {
+						continue;
+					}
+
+					if (!is_string($configProvider) ||
+					    !class_exists($configProvider) ||
+					    !is_a($configProvider, ConfigProviderInterface::class, true)
+					) {
+						throw new RuntimeException(
+							sprintf(
+								'The configProvider for package [%s] is invalid, `extra.config` must be an ' .
+								'existing classname string that inherits from `ConfigProviderInterface`.',
+								$packageName,
+							),
+						);
+					}
+
+					$providerConfigs[] = new $configProvider()();
+				}
+
+				return $this->providerConfigs = array_merge_recursive(...$providerConfigs);
 			}
 		};
 	}
@@ -102,6 +129,6 @@ ERROR,
 
 	public function __invoke(): ConfigProviderInterface
 	{
-		return (self::$container ??= $this)->configProvider;
+		return (self::$instance ??= $this)->configProvider;
 	}
 }
