@@ -9,6 +9,7 @@ use Psr\Container\NotFoundExceptionInterface;
 use ReflectionException;
 use ReflectionMethod;
 use SuperKernel\Di\Collector\ReflectionManager;
+use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Exception\CircularDependencyException;
 use SuperKernel\Di\Exception\InvalidDefinitionException;
@@ -19,12 +20,13 @@ use SuperKernel\Di\Contract\ResolverInterface;
  * @ParameterResolver
  * @\SuperKernel\Di\Resolver\ParameterResolver
  */
-final readonly class ParameterResolver implements ResolverInterface
+final class ParameterResolver implements ResolverInterface
 {
-	/**
-	 * @param ContainerInterface $container
-	 */
-	public function __construct(private ContainerInterface $container)
+	private ?ResolverInterface $resolverDispatcher = null {
+		get => $this->resolverDispatcher ??= $this->container->get(ResolverFactoryInterface::class);
+	}
+
+	public function __construct(private readonly ContainerInterface $container)
 	{
 	}
 

@@ -7,6 +7,7 @@ namespace SuperKernel\Di\Resolver;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use SuperKernel\Di\Collector\ReflectionManager;
+use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Exception\InvalidDefinitionException;
@@ -17,9 +18,13 @@ use SuperKernel\Di\Contract\ResolverInterface;
  * @ObjectResolver
  * @\SuperKernel\Di\Resolver\ObjectResolver
  */
-final readonly class ObjectResolver implements ResolverInterface
+final class ObjectResolver implements ResolverInterface
 {
-	public function __construct(private ContainerInterface $container, private ResolverInterface $resolverDispatcher)
+	private ?ResolverFactoryInterface $resolverDispatcher = null {
+		get => $this->resolverDispatcher ??= $this->container->get(ResolverFactoryInterface::class);
+	}
+
+	public function __construct(private readonly ContainerInterface $container)
 	{
 	}
 
@@ -53,7 +58,6 @@ final readonly class ObjectResolver implements ResolverInterface
 			);
 		}
 		if (!$definition->isInstantiable()) {
-			var_dump($definition);
 			throw InvalidDefinitionException::create(
 				$definition,
 				sprintf('Entry "%s" cannot be resolved: the class is not instantiable', $definition->getName()),
@@ -66,11 +70,10 @@ final readonly class ObjectResolver implements ResolverInterface
 			);
 		}
 
-		$classname       = $definition->getClassName();
-		var_dump($classname);
-		$classReflection = new ReflectionManager()->reflectClass($classname);
-
-		$arguments = $this->resolverDispatcher->resolve(new ParameterDefinition($classname, '__construct'), $parameters);
+		$classname           = $definition->getClassName();
+		$classReflection     = new ReflectionManager()->reflectClass($classname);
+		$parameterDefinition = new ParameterDefinition($classname, '__construct');
+		$arguments           = $this->resolverDispatcher->getResolver($parameterDefinition)->resolve($parameterDefinition, $parameters);
 
 		return $classReflection->newLazyGhost(function (object $object) use ($arguments) {
 			if (method_exists($object, '__construct')) {

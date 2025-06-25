@@ -9,10 +9,6 @@ use SuperKernel\Di\Contract\ConfigProviderInterface;
 use SuperKernel\Di\Aop\ScannerFactory;
 use SuperKernel\Di\Contract\ScannerInterface;
 
-/**
- * @ConfigProvider
- * @\SuperKernel\Di\ConfigProvider
- */
 final class ConfigProvider
 {
 	public function __invoke(): array

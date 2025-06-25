@@ -6,11 +6,13 @@ namespace SuperKernel\Di\Factory;
 use SplPriorityQueue;
 use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Annotation\Factory;
-use SuperKernel\Di\Container;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
+use SuperKernel\Di\Exception\NotFoundException;
 use SuperKernel\Di\Resolver\FactoryResolver;
+use SuperKernel\Di\Resolver\ObjectResolver;
+use SuperKernel\Di\Resolver\ParameterResolver;
 
 #[Factory]
 final class ResolverFactory implements ResolverFactoryInterface
@@ -27,20 +29,32 @@ final class ResolverFactory implements ResolverFactoryInterface
 	public function __construct(private readonly ContainerInterface $container)
 	{
 		$this->setResolver(new FactoryResolver($this->container));
+		$this->setResolver(new ObjectResolver($this->container));
+		$this->setResolver(new ParameterResolver($this->container));
 	}
 
-	public function getResolver(DefinitionInterface $definition): ?ResolverInterface
+	/**
+	 * @param DefinitionInterface $definition
+	 *
+	 * @return ResolverInterface
+	 * @throws NotFoundException
+	 */
+	public function getResolver(DefinitionInterface $definition): ResolverInterface
 	{
 		$resolvers = clone $this->resolvers;
 		$resolvers->top();
 
 		foreach ($resolvers as $resolver) {
-			if ($resolver->supports($definition)) {
-				return $resolver->get($definition);
+			var_dump(get_class($resolver));
+			if (!$resolver->support($definition)) {
+				continue;
 			}
+			return $resolver;
 		}
 
-		return null;
+		throw new NotFoundException(
+			sprintf('The is no resolver that supports definer "%s".', get_class($definition)),
+		);
 	}
 
 	public function setResolver(ResolverInterface $resolver, int $priority = 0): void

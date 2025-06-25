@@ -1,14 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use SuperKernel\Di\Abstract\AbstractContainerFactory;
-use SuperKernel\Di\ConfigProviderFactory;
 use SuperKernel\Di\Container;
-use SuperKernel\Di\ContainerFactory;
-use SuperKernel\Di\Contract\DefinerFactoryInterface;
-use SuperKernel\Di\Definer\FactoryDefiner;
-use SuperKernel\Di\Factory\DefinerFactory;
-use SuperKernel\Di\Factory\ResolverFactory;
 use Tests\Application;
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -21,6 +14,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 //}()->get(Application::class)->run();
 
 
-new Container()->get(Application::class)->run();
+var_dump(
+	new Container()->get(Application::class)
+);
 
-new ContainerFactory()()->get(Application::class)->run();
+//	->run();
+
+//new ContainerFactory()()->get(Application::class)->run();

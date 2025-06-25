@@ -5,7 +5,6 @@ namespace SuperKernel\Di\Factory;
 
 use SplPriorityQueue;
 use SuperKernel\Di\Annotation\Factory;
-use SuperKernel\Di\Container;
 use SuperKernel\Di\Contract\DefinerFactoryInterface;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;

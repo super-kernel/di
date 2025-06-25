@@ -58,7 +58,8 @@
         }
     ],
     "require-dev": {
-        "super-kernel/composer-plugin": "^1.0"
+        "super-kernel/composer-plugin": "^1.0",
+        "symfony/finder": "^7.3"
     },
     "config": {
         "allow-plugins": {

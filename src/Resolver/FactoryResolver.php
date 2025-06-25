@@ -6,23 +6,24 @@ namespace SuperKernel\Di\Resolver;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
-use SuperKernel\Di\Factory\ResolverFactory;
 
 /**
  * @FactoryResolver
  * @\SuperKernel\Di\Resolver\FactoryResolver
  */
-final readonly class FactoryResolver implements ResolverInterface
+final class FactoryResolver implements ResolverInterface
 {
-	private ResolverInterface $resolverDispatcher;
+	private ?ResolverInterface $resolverDispatcher = null {
+		get => $this->resolverDispatcher ??= $this->container->get(ResolverFactoryInterface::class);
+	}
 
-	public function __construct(private ContainerInterface $container)
+	public function __construct(private readonly ContainerInterface $container)
 	{
-		$this->resolverDispatcher = $this->container->get(ResolverFactory::class);
 	}
 
 	/**

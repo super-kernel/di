@@ -5,10 +5,10 @@ namespace SuperKernel\Di;
 
 use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Annotation\Factory;
-use SuperKernel\Di\Contract\DefinerFactoryInterface;
+use SuperKernel\Di\Contract\DefinitionSourceInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
+use SuperKernel\Di\Definition\DefinitionSource;
 use SuperKernel\Di\Exception\NotFoundException;
-use SuperKernel\Di\Factory\DefinerFactory;
 use SuperKernel\Di\Factory\ResolverFactory;
 
 /**
@@ -19,13 +19,16 @@ final class Container implements ContainerInterface
 {
 	private array $resolverEntries = [];
 
-	private DefinerFactoryInterface  $definerFactory;
 	private ResolverFactoryInterface $resolverFactory;
 
-	public function __construct()
+	public function __construct(private ?DefinitionSourceInterface $definitionSource = null)
 	{
-		$this->definerFactory  = new DefinerFactory();
-		$this->resolverFactory = new ResolverFactory($this);
+		$this->definitionSource ??= new DefinitionSource();
+		$this->resolverFactory  = new ResolverFactory($this);
+
+		$this->resolverEntries = [
+			ResolverFactoryInterface::class => $this->resolverFactory,
+		];
 	}
 
 	/**
@@ -34,13 +37,11 @@ final class Container implements ContainerInterface
 	 */
 	public function get(string $id): mixed
 	{
-
 		if (isset($this->resolverEntries[$id]) || array_key_exists($id, $this->resolverEntries)) {
-
 			return $this->resolverEntries[$id];
 		}
 
-		$definition = $this->definerFactory->getDefinition($id);
+		$definition = $this->definitionSource->getDefinition($id);
 
 		if (!$definition) {
 			throw new NotFoundException(
@@ -60,7 +61,7 @@ final class Container implements ContainerInterface
 			return true;
 		}
 
-		return $this->definerFactory->getDefinition($id)?->isInstantiable() ?? false;
+		return $this->definitionSource->getDefinition($id)?->isInstantiable() ?? false;
 	}
 
 	/**
@@ -79,7 +80,7 @@ final class Container implements ContainerInterface
 	 */
 	public function make(string $id, array $parameters = []): mixed
 	{
-		$definition = $this->definerFactory->getDefinition($id);
+		$definition = $this->definitionSource->getDefinition($id);
 
 		if (!$definition) {
 			throw new NotFoundException(

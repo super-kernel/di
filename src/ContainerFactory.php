@@ -15,6 +15,7 @@ final class ContainerFactory
 
 	public function __construct()
 	{
+		//  实现额外进程开销完善所有类的扫描及注解类缓存
 	}
 
 	public function __invoke(): ContainerInterface
@@ -22,8 +23,6 @@ final class ContainerFactory
 		if (self::$container) {
 			return self::$container;
 		}
-
-		//  实现额外进程开销完善所有类的扫描及注解类缓存
 
 		try {
 			return self::$container = new Container()->get(Container::class);
