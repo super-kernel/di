@@ -7,10 +7,10 @@ use SuperKernel\Di\Aop\Scanner\AbstractScanHandler;
 use SuperKernel\Di\Aop\Scanner\ConfigProvider;
 use SuperKernel\Di\Aop\Scanner\Scanned;
 use SuperKernel\Di\Collector\ReflectionManager;
-use SuperKernel\Di\Contract\ScannerInterface;
+use SuperKernel\Di\Contract\ScanHandlerInterface;
 use Swoole\Process;
 
-final class SwooleProcessScanHandler extends AbstractScanHandler implements ScannerInterface
+final class SwooleProcessScanHandler extends AbstractScanHandler implements ScanHandlerInterface
 {
 	public function __construct(private ConfigProvider $configProvider)
 	{
@@ -26,17 +26,20 @@ final class SwooleProcessScanHandler extends AbstractScanHandler implements Scan
 		$process = new Process(function () use ($classmap) {
 			foreach ($classmap as $classname => $path) {
 				if (class_exists($classname)) {
-
 					$classImplements = class_implements($classname) ?: [];
 
-					var_dump($classImplements);
 					foreach ($classImplements as $classImplement) {
 						if (!interface_exists($classImplement)) {
 							break 2;
 						}
 					}
 
-					new ReflectionManager()->reflectClass($classname);
+					try {
+						ReflectionManager::reflectClass($classname);
+					}
+					catch (\ReflectionException $exception) {
+
+					}
 				}
 			}
 		});
@@ -44,10 +47,6 @@ final class SwooleProcessScanHandler extends AbstractScanHandler implements Scan
 		$process->start();
 
 		$status = $process->wait();
-
-		var_dump(
-			$this->configProvider->getRootPackage(),
-		);
 
 		return new Scanned(true);
 	}

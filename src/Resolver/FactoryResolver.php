@@ -50,9 +50,6 @@ final class FactoryResolver implements ResolverInterface
 		$classname           = $definition->getClassname();
 		$objectDefinition    = new ObjectDefinition($classname);
 		$object              = $this->resolverDispatcher->getResolver($objectDefinition)->resolve($objectDefinition, $parameters);
-
-		var_dump($object);
-
 		$parameterDefinition = new ParameterDefinition($classname, '__invoke');
 		$arguments           = $this->resolverDispatcher->getResolver($parameterDefinition)->resolve($parameterDefinition, $parameters);
 
