@@ -5,5 +5,4 @@ namespace SuperKernel\Di\Contract;
 
 interface ResolverFactoryInterface
 {
-
 }

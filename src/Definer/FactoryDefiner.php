@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Definer;
 
-use ReflectionAttribute;
+use ReflectionException;
 use SuperKernel\Di\Annotation\Definer;
 use SuperKernel\Di\Annotation\Factory;
 use SuperKernel\Di\Collector\ReflectionManager;
@@ -14,27 +14,31 @@ use SuperKernel\Di\Definition\FactoryDefinition;
 #[Definer]
 final class FactoryDefiner implements DefinerInterface
 {
-	private ReflectionManager $reflectionManager;
-
-	public function __construct()
+	/**
+	 * @param string $id
+	 *
+	 * @return DefinitionInterface
+	 */
+	public function getDefinition(string $id): DefinitionInterface
 	{
-		$this->reflectionManager = new ReflectionManager()();
+		return new FactoryDefinition($id);
 	}
 
 	/**
 	 * @param string $id
 	 *
-	 * @return DefinitionInterface|null
+	 * @return bool
 	 */
-	public function getDefinition(string $id): ?DefinitionInterface
+	public function support(string $id): bool
 	{
-		$attributes = $this->reflectionManager->reflectClass($id)?->getAttributes() ?? [];
+		try {
+			$reflectClass = ReflectionManager::reflectClass($id);
+			$attributes   = $reflectClass->getAttributes();
 
-		/* @var ReflectionAttribute $attribute */
-		if (array_any($attributes, fn($attribute) => Factory::class === $attribute->getName())) {
-			return new FactoryDefinition($id);
+			return array_any($attributes, fn($attribute) => $attribute->getName() === Factory::class);
 		}
-
-		return null;
+		catch (ReflectionException) {
+			return false;
+		}
 	}
 }

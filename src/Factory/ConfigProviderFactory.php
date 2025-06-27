@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di;
+namespace SuperKernel\Di\Factory;
 
 use Closure;
 use Composer\Autoload\ClassLoader;
@@ -12,7 +12,7 @@ use SuperKernel\Di\Contract\ConfigProviderInterface;
 
 /**
  * @ConfigProviderFactory
- * @\SuperKernel\Di\ConfigProviderFactory
+ * @\SuperKernel\Di\Factory\ConfigProviderFactory
  */
 final class ConfigProviderFactory
 {

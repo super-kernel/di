@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Factory;
 
 use SplPriorityQueue;
-use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Annotation\Factory;
+use SuperKernel\Di\Contract\ContainerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
@@ -45,7 +45,6 @@ final class ResolverFactory implements ResolverFactoryInterface
 		$resolvers->top();
 
 		foreach ($resolvers as $resolver) {
-			var_dump(get_class($resolver));
 			if (!$resolver->support($definition)) {
 				continue;
 			}

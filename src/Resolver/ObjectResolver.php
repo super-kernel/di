@@ -6,6 +6,7 @@ namespace SuperKernel\Di\Resolver;
 
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
+use ReflectionException;
 use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Definition\ObjectDefinition;
@@ -70,15 +71,35 @@ final class ObjectResolver implements ResolverInterface
 			);
 		}
 
-		$classname           = $definition->getClassName();
-		$classReflection     = new ReflectionManager()->reflectClass($classname);
+		$classname = $definition->getClassName();
+
+		try {
+			$reflectClass = new ReflectionManager()->reflectClass($classname);
+		}
+		catch (ReflectionException $reflectionException) {
+			throw InvalidDefinitionException::create(
+				$definition,
+				sprintf('Entry "%s" cannot be resolved: %s', $definition->getName(), $reflectionException->getMessage()),
+			);
+		}
+
 		$parameterDefinition = new ParameterDefinition($classname, '__construct');
 		$arguments           = $this->resolverDispatcher->getResolver($parameterDefinition)->resolve($parameterDefinition, $parameters);
 
-		return $classReflection->newLazyGhost(function (object $object) use ($arguments) {
-			if (method_exists($object, '__construct')) {
-				$object->__construct(...$arguments);
-			}
-		});
+//		return $reflectClass->newLazyGhost(function (object $object) use ($arguments) {
+//			if (method_exists($object, '__construct')) {
+//				$object->__construct(...$arguments);
+//			}
+//		});
+
+		try {
+			return $reflectClass->newInstance(...$arguments);
+		}
+		catch (ReflectionException $reflectionException) {
+			throw InvalidDefinitionException::create(
+				$definition,
+				sprintf('Entry "%s" cannot be create instance: %s', $definition->getName(), $reflectionException->getMessage()),
+			);
+		}
 	}
 }

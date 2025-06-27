@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di;
 
-use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Annotation\Factory;
-use SuperKernel\Di\Contract\DefinitionSourceInterface;
+use SuperKernel\Di\Contract\ContainerInterface;
+use SuperKernel\Di\Contract\DefinerFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
-use SuperKernel\Di\Definition\DefinitionSource;
 use SuperKernel\Di\Exception\NotFoundException;
+use SuperKernel\Di\Factory\DefinerFactory;
 use SuperKernel\Di\Factory\ResolverFactory;
 
 /**
@@ -21,12 +21,13 @@ final class Container implements ContainerInterface
 
 	private ResolverFactoryInterface $resolverFactory;
 
-	public function __construct(private ?DefinitionSourceInterface $definitionSource = null)
+	public function __construct(private ?DefinerFactoryInterface $definitionSource = null)
 	{
-		$this->definitionSource ??= new DefinitionSource();
+		$this->definitionSource ??= new DefinerFactory();
 		$this->resolverFactory  = new ResolverFactory($this);
 
 		$this->resolverEntries = [
+			self::class                     => $this,
 			ResolverFactoryInterface::class => $this->resolverFactory,
 		];
 	}

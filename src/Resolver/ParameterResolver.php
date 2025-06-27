@@ -16,10 +16,6 @@ use SuperKernel\Di\Exception\InvalidDefinitionException;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 
-/**
- * @ParameterResolver
- * @\SuperKernel\Di\Resolver\ParameterResolver
- */
 final class ParameterResolver implements ResolverInterface
 {
 	private ?ResolverInterface $resolverDispatcher = null {
@@ -96,7 +92,7 @@ final class ParameterResolver implements ResolverInterface
 
 			$typeName = $parameter->getType()?->getName();
 
-			if (is_string($typeName) && (class_exists($typeName) || interface_exists($typeName))) {
+			if (is_string($typeName) && $this->container->has($typeName)) {
 				$arguments[] = $this->container->get($typeName);
 				continue;
 			}

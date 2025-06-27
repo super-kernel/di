@@ -1,23 +1,21 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Aop;
+namespace SuperKernel\Di\Aop\Scanner;
 
 use Phar;
-use SuperKernel\Contract\ContainerInterface;
+use SuperKernel\Di\Annotation\Factory;
 use SuperKernel\Di\Aop\Scanner\Driver\NullScanHandler;
 use SuperKernel\Di\Aop\Scanner\Driver\PcntlScanHandler;
 use SuperKernel\Di\Aop\Scanner\Driver\ProcessScanHandler;
 use SuperKernel\Di\Aop\Scanner\Driver\SwooleProcessScanHandler;
-use SuperKernel\Di\Contract\ScannerInterface;
+use SuperKernel\Di\Container;
+use SuperKernel\Di\Contract\ScanHandlerInterface;
 
-/**
- * @ScannerFactory
- * @\SuperKernel\Di\Aop\ScannerFactory
- */
-final class ScannerFactory
+#[Factory]
+final class ScanHandlerFactory
 {
-	public function __invoke(ContainerInterface $container): ScannerInterface
+	public function __invoke(Container $container): ScanHandlerInterface
 	{
 		return $container->get(match (true) {
 			!!Phar::running(false)

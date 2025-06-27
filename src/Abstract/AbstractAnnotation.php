@@ -7,7 +7,10 @@ use Reflector;
 
 abstract class AbstractAnnotation
 {
-	abstract public function __construct();
-
-	abstract public function process(Reflector $reflector): mixed;
+	/**
+	 * @param Reflector $reflector
+	 *
+	 * @return mixed
+	 */
+	abstract public function process($reflector): mixed;
 }

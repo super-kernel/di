@@ -5,10 +5,6 @@ namespace SuperKernel\Di\Annotation;
 
 use Attribute;
 
-/**
- * @Resolver
- * @\SuperKernel\Di\Annotation\Resolver
- */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class Resolver
 {

@@ -8,6 +8,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Definition\FactoryDefinition;
+use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
@@ -18,7 +19,7 @@ use SuperKernel\Di\Contract\ResolverInterface;
  */
 final class FactoryResolver implements ResolverInterface
 {
-	private ?ResolverInterface $resolverDispatcher = null {
+	private ?ResolverFactoryInterface $resolverDispatcher = null {
 		get => $this->resolverDispatcher ??= $this->container->get(ResolverFactoryInterface::class);
 	}
 
@@ -46,11 +47,15 @@ final class FactoryResolver implements ResolverInterface
 	 */
 	public function resolve(DefinitionInterface $definition, array $parameters = []): mixed
 	{
-		$classname  = $definition->getClassname();
-		$object     = $this->container->get($classname);
-		$arguments  = $this->resolverDispatcher->resolve(new ParameterDefinition($classname, '__invoke'), $parameters);
-		$parameters = array_merge($arguments, $parameters);
+		$classname           = $definition->getClassname();
+		$objectDefinition    = new ObjectDefinition($classname);
+		$object              = $this->resolverDispatcher->getResolver($objectDefinition)->resolve($objectDefinition, $parameters);
 
-		return $object(...$parameters);
+		var_dump($object);
+
+		$parameterDefinition = new ParameterDefinition($classname, '__invoke');
+		$arguments           = $this->resolverDispatcher->getResolver($parameterDefinition)->resolve($parameterDefinition, $parameters);
+
+		return $object(...$arguments);
 	}
 }

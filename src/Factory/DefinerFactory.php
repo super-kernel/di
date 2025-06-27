@@ -35,10 +35,11 @@ final class DefinerFactory implements DefinerFactoryInterface
 		$definitions->top();
 
 		foreach ($definitions as $definition) {
-			$definer = $definition->getDefinition($id);
-			if ($definer instanceof DefinitionInterface) {
-				return $definer;
+			if (!$definition->support($id)) {
+				continue;
 			}
+			
+			return $definition->getDefinition($id);
 		}
 
 		return null;

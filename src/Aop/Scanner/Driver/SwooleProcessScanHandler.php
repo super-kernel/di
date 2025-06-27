@@ -1,21 +1,18 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Aop\Scanner;
+namespace SuperKernel\Di\Aop\Scanner\Driver;
 
-use SuperKernel\Contract\ProviderConfigInterface;
-use SuperKernel\Di\Aop\Scanned;
+use SuperKernel\Di\Aop\Scanner\AbstractScanHandler;
+use SuperKernel\Di\Aop\Scanner\ConfigProvider;
+use SuperKernel\Di\Aop\Scanner\Scanned;
 use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Contract\ScannerInterface;
 use Swoole\Process;
 
-/**
- * @SwooleProcessScanner
- * @\SuperKernel\Di\Composer\Scanner\SwooleProcessScanner
- */
-final readonly class SwooleProcessScanner implements ScannerInterface
+final class SwooleProcessScanHandler extends AbstractScanHandler implements ScannerInterface
 {
-	public function __construct(private ProviderConfigInterface $providerConfig)
+	public function __construct(private ConfigProvider $configProvider)
 	{
 	}
 
@@ -24,7 +21,7 @@ final readonly class SwooleProcessScanner implements ScannerInterface
 	 */
 	public function scan(): Scanned
 	{
-		$classmap = $this->providerConfig->getClassLoader()->getClassmap();
+		$classmap = $this->configProvider->getClassLoader()->getClassmap();
 
 		$process = new Process(function () use ($classmap) {
 			foreach ($classmap as $classname => $path) {
@@ -49,7 +46,7 @@ final readonly class SwooleProcessScanner implements ScannerInterface
 		$status = $process->wait();
 
 		var_dump(
-			$this->providerConfig->getRootPackage(),
+			$this->configProvider->getRootPackage(),
 		);
 
 		return new Scanned(true);
@@ -57,6 +54,6 @@ final readonly class SwooleProcessScanner implements ScannerInterface
 
 	private function runtimePath(): string
 	{
-		return $this->providerConfig->getRootPath() . '/runtime/container/scan.cache';
+		return $this->configProvider->getRootPath() . '/runtime/container/scan.cache';
 	}
 }

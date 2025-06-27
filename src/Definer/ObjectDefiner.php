@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Definer;
 
+use ReflectionException;
 use SuperKernel\Di\Annotation\Definer;
+use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Definition\ObjectDefinition;
@@ -18,14 +20,25 @@ final class ObjectDefiner implements DefinerInterface
 	/**
 	 * @param string $id
 	 *
-	 * @return DefinitionInterface|null
+	 * @return DefinitionInterface
 	 */
-	public function getDefinition(string $id): ?DefinitionInterface
+	public function getDefinition(string $id): DefinitionInterface
 	{
-		if (class_exists($id) || interface_exists($id)) {
-			return new ObjectDefinition($id);
-		}
+		return new ObjectDefinition($id);
+	}
 
-		return null;
+	/**
+	 * @param string $id
+	 *
+	 * @return bool
+	 */
+	public function support(string $id): bool
+	{
+		try {
+			return ReflectionManager::reflectClass($id)->isInstantiable();
+		}
+		catch (ReflectionException) {
+			return false;
+		}
 	}
 }

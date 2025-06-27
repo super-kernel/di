@@ -5,11 +5,7 @@ namespace SuperKernel\Di\Contract;
 
 use SuperKernel\Di\Aop\Scanner\Scanned;
 
-/**
- * @ScannerInterface
- * @\SuperKernel\Di\Contract\ScannerInterface
- */
-interface ScannerInterface
+interface ScanHandlerInterface
 {
 	public function scan(): Scanned;
 }

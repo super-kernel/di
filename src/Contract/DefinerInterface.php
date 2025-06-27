@@ -5,5 +5,7 @@ namespace SuperKernel\Di\Contract;
 
 interface DefinerInterface
 {
-	public function getDefinition(string $id): ?DefinitionInterface;
+	public function support(string $id): bool;
+
+	public function getDefinition(string $id): DefinitionInterface;
 }
