@@ -7,10 +7,6 @@ use ReflectionMethod;
 use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Contract\DefinitionInterface;
 
-/**
- * @ParameterDefinition
- * @\SuperKernel\Di\Definer\ParameterDefinition
- */
 final class ParameterDefinition implements DefinitionInterface
 {
 	public function __construct(private string $name, private string $method, private array $parameters = [])

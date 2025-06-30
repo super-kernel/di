@@ -12,7 +12,7 @@ use SuperKernel\Di\Contract\DefinitionInterface;
  * @AbstractDefinitionFactory
  * @\SuperKernel\Di\AbstractDefinitionFactory
  */
-abstract class AbstractDefinitionFactory implements DefinitionFactoryInterface
+abstract class DefinitionFactoryAbstract implements DefinitionFactoryInterface
 {
 	private static ?DefinitionFactoryInterface $instance = null;
 

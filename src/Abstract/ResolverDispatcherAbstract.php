@@ -11,10 +11,10 @@ use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 
 /**
- * @AbstractResolverDispatcher
- * @\SuperKernel\Di\Abstract\AbstractResolverDispatcher
+ * @ResolverDispatcherAbstract
+ * @\SuperKernel\Di\Abstract\ResolverDispatcherAbstract
  */
-abstract class AbstractResolverDispatcher implements ResolverInterface
+abstract class ResolverDispatcherAbstract implements ResolverInterface
 {
 	private array $resolvers = [];
 

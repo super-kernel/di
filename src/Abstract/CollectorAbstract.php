@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Abstract;
 
 /**
- * @AbstractCollector
- * @\SuperKernel\Di\Abstract\AbstractCollector
+ * @CollectorAbstract
+ * @\SuperKernel\Di\Abstract\CollectorAbstract
  */
-abstract class AbstractCollector
+abstract class CollectorAbstract
 {
 	protected static array $collectors = [];
 

@@ -3,13 +3,51 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Aop\Scanner\Driver;
 
-use SuperKernel\Di\Aop\Scanner\AbstractScanHandler;
+use SuperKernel\Di\Abstract\ScanHandlerAbstract;
 use SuperKernel\Di\Aop\Scanner\Scanned;
-use SuperKernel\Di\Contract\ScannerInterface;
+use SuperKernel\Di\Exception\Exception;
+use function pcntl_fork;
+use function pcntl_wait;
 
-final class PcntlScanHandler extends AbstractScanHandler implements ScannerInterface
+final class PcntlScanHandler extends ScanHandlerAbstract
 {
-	public function scan(): Scanned
+	/**
+	 * @return void
+	 * @throws Exception
+	 */
+	public function scan(): void
 	{
+		$scanned = $this->process();
+
+		if ($scanned->isScanned()) {
+			return;
+		}
+
+		$this->scanner->process();
+
+		exit(0);
+	}
+
+	/**
+	 * @return Scanned|void
+	 * @throws Exception
+	 */
+	private function process()
+	{
+		$pid = pcntl_fork();
+
+		if ($pid == -1) {
+			throw new Exception('The process fork failed');
+		}
+		if ($pid) {
+			pcntl_wait($status);
+			if ($status !== 0) {
+				exit(-1);
+			}
+
+			return new Scanned(true);
+		}
+
+		return new Scanned(false);
 	}
 }

@@ -23,10 +23,10 @@ use SuperKernel\Di\{
 };
 
 /**
- * @AbstractContainerFactory
- * @\SuperKernel\Di\Abstract\AbstractContainerFactory
+ * @ContainerFactoryAbstract
+ * @\SuperKernel\Di\Abstract\ContainerFactoryAbstract
  */
-abstract class AbstractContainerFactory implements ContainerFactoryInterface
+abstract class ContainerFactoryAbstract implements ContainerFactoryInterface
 {
 	private array $resolvers = [
 		ObjectDefinition::class    => ObjectResolver::class,
@@ -45,13 +45,13 @@ abstract class AbstractContainerFactory implements ContainerFactoryInterface
 
 	public function getDefinitionFactory(): DefinitionFactoryInterface
 	{
-		return new class ($this->getDependencies()) extends AbstractDefinitionFactory {
+		return new class ($this->getDependencies()) extends DefinitionFactoryAbstract {
 		};
 	}
 
 	public function getResolverDispatcher(ContainerInterface $container): ResolverInterface
 	{
-		return new class ($container, $this->resolvers) extends AbstractResolverDispatcher implements ResolverInterface {
+		return new class ($container, $this->resolvers) extends ResolverDispatcherAbstract implements ResolverInterface {
 		};
 	}
 

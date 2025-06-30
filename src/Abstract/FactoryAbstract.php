@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Abstract;
 
-abstract class AbstractFactory
+abstract class FactoryAbstract
 {
 	protected static mixed $instance = null;
 

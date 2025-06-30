@@ -5,7 +5,7 @@ namespace SuperKernel\Di\Abstract;
 
 use Reflector;
 
-abstract class AbstractAnnotation
+abstract class AnnotationAbstract
 {
 	/**
 	 * @param Reflector $reflector

@@ -3,17 +3,11 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Aop\Scanner\Driver;
 
-use SuperKernel\Di\Aop\Scanner\AbstractScanHandler;
-use SuperKernel\Di\Aop\Scanner\Scanned;
-use SuperKernel\Di\Contract\ScannerInterface;
+use SuperKernel\Di\Abstract\ScanHandlerAbstract;
 
-final class NullScanHandler extends AbstractScanHandler implements ScannerInterface
+final class NullScanHandler extends ScanHandlerAbstract
 {
-	/**
-	 * @return Scanned
-	 */
-	public function scan(): Scanned
+	public function scan(): void
 	{
-		// TODO: Implement scan() method.
 	}
 }

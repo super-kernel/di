@@ -10,7 +10,7 @@ interface AnnotationInterface
 	/**
 	 * @param Reflector $reflector
 	 *
-	 * @return mixed
+	 * @return void
 	 */
-	public function process(Reflector $reflector): mixed;
+	public function process(Reflector $reflector): void;
 }

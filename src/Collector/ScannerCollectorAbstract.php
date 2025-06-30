@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Collector;
 
 use Composer\Autoload\ClassLoader;
-use SuperKernel\Di\Abstract\AbstractCollector;
+use SuperKernel\Di\Abstract\CollectorAbstract;
 
-final class ScannerCollector extends AbstractCollector
+final class ScannerCollectorAbstract extends CollectorAbstract
 {
 	public function __construct(private readonly ClassLoader $classLoader)
 	{

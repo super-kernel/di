@@ -18,7 +18,7 @@ final class ProxyManager
 {
 	private array $proxies = [];
 
-	public function __construct(private array $classMap)
+	public function __construct(private array $classMap, private string $proxyDir)
 	{
 		$this->handle();
 	}

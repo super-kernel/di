@@ -22,9 +22,11 @@
         }
     },
     "require": {
+        "ext-swoole": "*",
+        "ext-pcntl": "*",
         "nikic/php-parser": "^5.4",
         "super-kernel/contract": "^1.0",
-        "ext-swoole": "*"
+        "symfony/filesystem": "^7.3"
     },
     "authors": [
         {
