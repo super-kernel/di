@@ -6,15 +6,14 @@ namespace SuperKernel\Di\Factory;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 use SuperKernel\Di\Annotation\Annotation;
 use SuperKernel\Di\Annotation\Factory;
-use SuperKernel\Di\Aop\Scanner\Scanner;
 use SuperKernel\Di\Container;
 use SuperKernel\Di\Contract\ContainerInterface;
-use SuperKernel\Di\Exception\NotFoundException;
 
 #[
 	Factory,
 	Annotation(
 		[
+			Container::class,
 			ContainerInterface::class,
 			PsrContainerInterface::class,
 		]
@@ -22,16 +21,6 @@ use SuperKernel\Di\Exception\NotFoundException;
 ]
 final readonly class ContainerFactory
 {
-	/**
-	 * @param Container $container
-	 *
-	 * @throws NotFoundException
-	 */
-	public function __construct(private Container $container)
-	{
-		$this->container->get(Scanner::class)->scan();
-	}
-
 	/**
 	 * @return ContainerInterface
 	 */

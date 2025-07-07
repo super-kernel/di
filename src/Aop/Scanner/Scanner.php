@@ -3,8 +3,14 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Aop\Scanner;
 
+use PhpParser\Node;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
+use PhpParser\NodeVisitorAbstract;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
+use ReflectionException;
+use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Container;
 use SuperKernel\Di\Contract\ScanHandlerInterface;
 use SuperKernel\Di\Exception\NotFoundException;
@@ -52,7 +58,37 @@ final class Scanner
 	public function process(): void
 	{
 		foreach ($this->configProvider->getFinder() as $finder) {
-			var_dump($finder);
+			$ast = $this->parser->parse($finder->getContents());
+
+
+			$nameResolver  = new NameResolver(null, [
+				'preserveOriginalNames' => true,
+				'replaceNodes'          => true,
+			]);
+			$nodeTraverser = new NodeTraverser();
+			$nodeTraverser->addVisitor($nameResolver);
+			$nodeTraverser->addVisitor(new class extends NodeVisitorAbstract {
+				private string $className;
+
+				public function enterNode(Node $node)
+				{
+					if ($node instanceof Node\Stmt\Class_) {
+						var_dump($node->name->name);
+					}
+				}
+			});
+
+			// Resolve names
+			$stmts = $nodeTraverser->traverse($ast);
+
+//			var_dump(
+//				[
+//					$finder,
+//					$nameResolver->getNameContext()->getNamespace()->name,
+//					$nameResolver->getNameContext(),
+//				],
+//			);
+			exit();
 		}
 	}
 

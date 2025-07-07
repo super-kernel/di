@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di;
 
-use SuperKernel\Di\Annotation\Factory;
 use SuperKernel\Di\Contract\ContainerInterface;
 use SuperKernel\Di\Contract\DefinerFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
@@ -14,7 +13,6 @@ use SuperKernel\Di\Factory\ResolverFactory;
 /**
  * Containers only manage long-lived objects, and short-lived objects are managed by the caller.
  */
-#[Factory]
 final class Container implements ContainerInterface
 {
 	private array $resolverEntries = [];
