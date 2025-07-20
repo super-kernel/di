@@ -11,5 +11,6 @@ final readonly class Application
 
 	public function run()
 	{
+		var_dump('run');
 	}
 }

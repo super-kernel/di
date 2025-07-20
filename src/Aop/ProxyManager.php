@@ -10,10 +10,6 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 
-/**
- * @ProxyManager
- * @\SuperKernel\Di\Aop\ProxyManager
- */
 final class ProxyManager
 {
 	private array $proxies = [];

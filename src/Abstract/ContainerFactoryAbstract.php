@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Abstract;
 
 use Psr\Container\{
-	ContainerExceptionInterface, ContainerInterface, NotFoundExceptionInterface
+	ContainerExceptionInterface,
+	ContainerInterface,
+	NotFoundExceptionInterface,
 };
 use SuperKernel\Di\{
 	Container,

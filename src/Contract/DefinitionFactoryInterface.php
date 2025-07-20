@@ -13,5 +13,9 @@ interface DefinitionFactoryInterface
 {
 	public function getDefinition(string $id): ?DefinitionInterface;
 
-	public function getResolver(DefinitionInterface $definition): ?ResolverInterface;
+	public function getDefinitions(): array;
+
+	public function hasDefinition(string $id): bool;
+
+	public function setDefinition(string $id, ?string $definition): ?DefinitionInterface;
 }

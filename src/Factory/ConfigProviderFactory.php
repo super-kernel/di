@@ -10,10 +10,6 @@ use Exception;
 use RuntimeException;
 use SuperKernel\Di\Contract\ConfigProviderInterface;
 
-/**
- * @ConfigProviderFactory
- * @\SuperKernel\Di\Factory\ConfigProviderFactory
- */
 final class ConfigProviderFactory
 {
 	private static ?self $instance = null;
@@ -40,7 +36,38 @@ final class ConfigProviderFactory
 				})();
 			}
 
-			private ?array $providerConfigs = null;
+			private ?array $providerConfigs = null {
+				get => $this->providerConfigs ??= (function () {
+					$providerConfigs = [];
+
+					$packages = array_merge($this->allPackages, $this->rootPackage);
+
+					foreach ($packages as $packageName => $package) {
+						$configProvider = $package['extra']['super-kernel']['config'] ?? null;
+
+						if (null === $configProvider) {
+							continue;
+						}
+
+						if (!is_string($configProvider) ||
+						    !class_exists($configProvider) ||
+						    !is_a($configProvider, ConfigProviderInterface::class, true)
+						) {
+							throw new RuntimeException(
+								sprintf(
+									'The configProvider for package [%s] is invalid, `extra.config` must be an ' .
+									'existing classname string that inherits from `ConfigProviderInterface`.',
+									$packageName,
+								),
+							);
+						}
+
+						$providerConfigs[] = new $configProvider()();
+					}
+
+					return array_merge_recursive(...$providerConfigs);
+				})();
+			}
 
 			private readonly ClassLoader $classLoader;
 
@@ -71,40 +98,15 @@ final class ConfigProviderFactory
 				return $this->allPackages;
 			}
 
-			public function getAllProviders(): array
+			public function get(string $key, mixed $default = null): mixed
 			{
-				if (null !== $this->providerConfigs) {
-					return $this->providerConfigs;
+				$configs = $this->providerConfigs;
+
+				if (array_key_exists($key, $configs)) {
+					return $this->providerConfigs[$key];
 				}
 
-				$providerConfigs = [];
-
-				$packages = array_merge($this->allPackages, $this->rootPackage);
-
-				foreach ($packages as $packageName => $package) {
-					$configProvider = $package['extra']['super-kernel']['config'] ?? null;
-
-					if (null === $configProvider) {
-						continue;
-					}
-
-					if (!is_string($configProvider) ||
-					    !class_exists($configProvider) ||
-					    !is_a($configProvider, ConfigProviderInterface::class, true)
-					) {
-						throw new RuntimeException(
-							sprintf(
-								'The configProvider for package [%s] is invalid, `extra.config` must be an ' .
-								'existing classname string that inherits from `ConfigProviderInterface`.',
-								$packageName,
-							),
-						);
-					}
-
-					$providerConfigs[] = new $configProvider()();
-				}
-
-				return $this->providerConfigs = array_merge_recursive(...$providerConfigs);
+				return $default;
 			}
 		};
 	}
@@ -129,6 +131,11 @@ ERROR,
 
 	public function __invoke(): ConfigProviderInterface
 	{
-		return (self::$instance ??= $this)->configProvider;
+		$configProvider =  (self::$instance ??= $this)->configProvider;
+
+		//  TODO: Scan the annotation path provided by `configProvider`.
+
+
+		return $configProvider;
 	}
 }

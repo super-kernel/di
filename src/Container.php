@@ -4,29 +4,31 @@ declare(strict_types=1);
 namespace SuperKernel\Di;
 
 use SuperKernel\Di\Contract\ContainerInterface;
-use SuperKernel\Di\Contract\DefinerFactoryInterface;
+use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Exception\NotFoundException;
-use SuperKernel\Di\Factory\DefinerFactory;
-use SuperKernel\Di\Factory\ResolverFactory;
 
 /**
- * Containers only manage long-lived objects, and short-lived objects are managed by the caller.
+ * Containers only manage long-lived objects, and short-lived objects are managed by the
+ * caller {@see https://www.php-fig.org/psr/psr-11/}.
+ *
+ * After 2.0, containers are allowed to be automatically loaded.
  */
 final class Container implements ContainerInterface
 {
-	private array $resolverEntries = [];
+	private array $resolverEntries;
 
-	private ResolverFactoryInterface $resolverFactory;
-
-	public function __construct(private ?DefinerFactoryInterface $definitionSource = null)
+	public function __construct(
+		private readonly DefinitionFactoryInterface $definitionFactory,
+		private readonly ResolverFactoryInterface   $resolverFactory,
+	)
 	{
-		$this->definitionSource ??= new DefinerFactory();
-		$this->resolverFactory  = new ResolverFactory($this);
+		$this->resolverFactory->setContainer($this);
 
 		$this->resolverEntries = [
-			self::class                     => $this,
-			ResolverFactoryInterface::class => $this->resolverFactory,
+			self::class                       => $this,
+			ResolverFactoryInterface::class   => $this->resolverFactory,
+			DefinitionFactoryInterface::class => $this->definitionFactory,
 		];
 	}
 
@@ -40,15 +42,7 @@ final class Container implements ContainerInterface
 			return $this->resolverEntries[$id];
 		}
 
-		$definition = $this->definitionSource->getDefinition($id);
-
-		if (!$definition) {
-			throw new NotFoundException(
-				sprintf('Identifier "%s" is not defined.', $id),
-			);
-		}
-
-		return $this->resolverEntries[$id] = $this->resolverFactory->getResolver($definition)->resolve($definition);
+		return $this->resolverEntries[$id] = $this->make($id);
 	}
 
 	/**
@@ -60,7 +54,11 @@ final class Container implements ContainerInterface
 			return true;
 		}
 
-		return $this->definitionSource->getDefinition($id)?->isInstantiable() ?? false;
+		if ($this->definitionFactory->hasDefinition($id)) {
+			return true;
+		}
+
+		return $this->definitionFactory->getDefinition($id)?->isInstantiable() ?? false;
 	}
 
 	/**
@@ -73,13 +71,10 @@ final class Container implements ContainerInterface
 	 * @return mixed
 	 *
 	 * @throws NotFoundException
-	 *
-	 * @deprecated 2.0
-	 *
 	 */
 	public function make(string $id, array $parameters = []): mixed
 	{
-		$definition = $this->definitionSource->getDefinition($id);
+		$definition = $this->definitionFactory->getDefinition($id);
 
 		if (!$definition) {
 			throw new NotFoundException(

@@ -5,10 +5,12 @@ namespace SuperKernel\Di\Factory;
 
 use SplPriorityQueue;
 use SuperKernel\Di\Annotation\Factory;
+use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Contract\ContainerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
+use SuperKernel\Di\Exception\Exception;
 use SuperKernel\Di\Exception\NotFoundException;
 use SuperKernel\Di\Resolver\FactoryResolver;
 use SuperKernel\Di\Resolver\ObjectResolver;
@@ -17,6 +19,17 @@ use SuperKernel\Di\Resolver\ParameterResolver;
 #[Factory]
 final class ResolverFactory implements ResolverFactoryInterface
 {
+	private static ?ResolverFactory $resolverFactory = null;
+
+	private ?SplPriorityQueue $resolverClasses = null {
+		get => $this->resolverClasses ??= new class extends SplPriorityQueue {
+			public function compare(mixed $priority1, mixed $priority2): int
+			{
+				return $priority2 <=> $priority1;
+			}
+		};
+	}
+
 	private ?SplPriorityQueue $resolvers = null {
 		get => $this->resolvers ??= new class extends SplPriorityQueue {
 			public function compare(mixed $priority1, mixed $priority2): int
@@ -26,12 +39,7 @@ final class ResolverFactory implements ResolverFactoryInterface
 		};
 	}
 
-	public function __construct(private readonly ContainerInterface $container)
-	{
-		$this->setResolver(new FactoryResolver($this->container));
-		$this->setResolver(new ObjectResolver($this->container));
-		$this->setResolver(new ParameterResolver($this->container));
-	}
+	private ContainerInterface $container;
 
 	/**
 	 * @param DefinitionInterface $definition
@@ -56,15 +64,42 @@ final class ResolverFactory implements ResolverFactoryInterface
 		);
 	}
 
-	public function setResolver(ResolverInterface $resolver, int $priority = 0): void
+	public function setResolver(string $resolver, int $priority = 0): void
 	{
-		$this->resolvers->insert($resolver, $priority);
+		$this->resolverClasses->insert($resolver, $priority);
 	}
 
-	private static ?ResolverFactory $instance = null;
+	public function setContainer(ContainerInterface $container): void
+	{
+		$this->container = $container;
+
+		$classes = $this->resolverClasses;
+		$classes->top();
+		$classes->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
+
+		while ($classes->valid()) {
+			[
+				'data'     => $resolver,
+				'priority' => $priority,
+			] = $classes->current();
+
+			if (!ReflectionManager::reflectClass($resolver)->implementsInterface(ResolverInterface::class)) {
+				throw new Exception(
+					sprintf(
+						'Resolver must implement ResolverInterface: %s',
+						get_class($resolver),
+					),
+				);
+			}
+
+			$this->resolvers->insert(new $resolver($this->container), $priority);
+
+			$classes->next();
+		}
+	}
 
 	public function __invoke(): ResolverFactory
 	{
-		return self::$instance ??= $this;
+		return self::$resolverFactory ??= $this;
 	}
 }

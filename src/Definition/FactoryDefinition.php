@@ -8,7 +8,7 @@ use SuperKernel\Di\Contract\DefinitionInterface;
 
 final class FactoryDefinition implements DefinitionInterface
 {
-	public function __construct(private string $name, private mixed $factory = null)
+	public function __construct(private string $name, private readonly mixed $factory = null)
 	{
 	}
 

@@ -19,6 +19,5 @@ interface ConfigProviderInterface
 
 	public function getAllPackages(): array;
 
-	public function getAllProviders(): array;
-
+	public function get(string $key, mixed $default = null): mixed;
 }

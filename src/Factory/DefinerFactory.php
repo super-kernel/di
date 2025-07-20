@@ -14,6 +14,8 @@ use SuperKernel\Di\Definer\ObjectDefiner;
 #[Factory]
 final class DefinerFactory implements DefinerFactoryInterface
 {
+	private static ?DefinerFactory $instance = null;
+
 	private ?SplPriorityQueue $definers = null {
 		get => $this->definers ??= new class extends SplPriorityQueue {
 			public function compare(mixed $priority1, mixed $priority2): int
@@ -21,12 +23,6 @@ final class DefinerFactory implements DefinerFactoryInterface
 				return $priority2 <=> $priority1;
 			}
 		};
-	}
-
-	public function __construct()
-	{
-		$this->setDefiner(new FactoryDefiner());
-		$this->setDefiner(new ObjectDefiner());
 	}
 
 	public function getDefinition(string $id): ?DefinitionInterface
@@ -38,7 +34,7 @@ final class DefinerFactory implements DefinerFactoryInterface
 			if (!$definition->support($id)) {
 				continue;
 			}
-			
+
 			return $definition->getDefinition($id);
 		}
 
@@ -49,8 +45,6 @@ final class DefinerFactory implements DefinerFactoryInterface
 	{
 		$this->definers->insert($definer, $priority);
 	}
-
-	private static ?DefinerFactory $instance = null;
 
 	public function __invoke(): DefinerFactory
 	{
