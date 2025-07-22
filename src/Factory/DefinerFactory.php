@@ -8,8 +8,6 @@ use SuperKernel\Di\Annotation\Factory;
 use SuperKernel\Di\Contract\DefinerFactoryInterface;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
-use SuperKernel\Di\Definer\FactoryDefiner;
-use SuperKernel\Di\Definer\ObjectDefiner;
 
 #[Factory]
 final class DefinerFactory implements DefinerFactoryInterface

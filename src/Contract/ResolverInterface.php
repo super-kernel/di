@@ -3,10 +3,6 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Contract;
 
-/**
- * @ResolverInterface
- * @\SuperKernel\Di\Contract\ResolverInterface
- */
 interface ResolverInterface
 {
 	public function support(DefinitionInterface $definition): bool;

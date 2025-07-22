@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Abstract;
 
-use SuperKernel\Di\Aop\Scanner\Scanner;
 use SuperKernel\Di\Container;
 use SuperKernel\Di\Contract\ScanHandlerInterface;
+use Tests\Aop\Scanner\Scanner;
 
 abstract class ScanHandlerAbstract implements ScanHandlerInterface
 {

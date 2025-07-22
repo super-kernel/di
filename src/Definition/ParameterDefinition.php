@@ -22,19 +22,11 @@ final class ParameterDefinition implements DefinitionInterface
 	}
 
 	/**
-	 * @return bool
-	 */
-	public function isInstantiable(): bool
-	{
-		// TODO: Implement isInstantiable() method.
-	}
-
-	/**
 	 * @return string
 	 */
 	public function __toString(): string
 	{
-		// TODO: Implement __toString() method.
+		return $this->name;
 	}
 
 	public function getReflectionMethod(): ?ReflectionMethod

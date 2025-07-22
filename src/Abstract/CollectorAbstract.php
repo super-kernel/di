@@ -3,10 +3,6 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Abstract;
 
-/**
- * @CollectorAbstract
- * @\SuperKernel\Di\Abstract\CollectorAbstract
- */
 abstract class CollectorAbstract
 {
 	protected static array $collectors = [];

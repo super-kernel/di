@@ -5,7 +5,6 @@ namespace SuperKernel\Di\Definition;
 
 use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Contract\DefinitionInterface;
-use SuperKernel\Di\Resolver\ObjectResolver;
 
 /**
  * @ObjectDefinition
@@ -15,7 +14,7 @@ final class ObjectDefinition implements DefinitionInterface
 {
 	private bool $classExists;
 
-	private bool $instantiable;
+	private ?bool $instantiable = null;
 
 	public function __construct(private string $name, private ?string $classname = null)
 	{
@@ -46,8 +45,6 @@ final class ObjectDefinition implements DefinitionInterface
 	public function setClassname(?string $classname = null): void
 	{
 		$this->classname = $classname;
-
-		$this->updateStatusCache();
 	}
 
 	public function isClassExists(): bool
@@ -57,25 +54,18 @@ final class ObjectDefinition implements DefinitionInterface
 
 	public function isInstantiable(): bool
 	{
-		return $this->instantiable;
-	}
+		if (is_null($this->instantiable)) {
+			$classname = $this->getClassname();
 
-	private function updateStatusCache(): void
-	{
-		$classname = $this->getClassname();
+			$this->classExists = class_exists($classname) || interface_exists($classname);
 
-		$this->classExists = class_exists($classname) || interface_exists($classname);
+			if (!$this->classExists) {
+				$this->instantiable = false;
+			}
 
-		if (!$this->classExists) {
-			$this->instantiable = false;
-			return;
+			$this->instantiable = new ReflectionManager()->reflectClass($classname)->isInstantiable();
 		}
 
-		$this->instantiable = new ReflectionManager()->reflectClass($classname)->isInstantiable();
-	}
-
-	public function getResolver(): string
-	{
-		return ObjectResolver::class;
+		return $this->instantiable;
 	}
 }

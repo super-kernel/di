@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Factory;
 
+use ReflectionException;
 use SplPriorityQueue;
 use SuperKernel\Di\Annotation\Factory;
 use SuperKernel\Di\Collector\ReflectionManager;
@@ -12,9 +13,6 @@ use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 use SuperKernel\Di\Exception\Exception;
 use SuperKernel\Di\Exception\NotFoundException;
-use SuperKernel\Di\Resolver\FactoryResolver;
-use SuperKernel\Di\Resolver\ObjectResolver;
-use SuperKernel\Di\Resolver\ParameterResolver;
 
 #[Factory]
 final class ResolverFactory implements ResolverFactoryInterface
@@ -69,6 +67,13 @@ final class ResolverFactory implements ResolverFactoryInterface
 		$this->resolverClasses->insert($resolver, $priority);
 	}
 
+	/**
+	 * @param ContainerInterface $container
+	 *
+	 * @return void
+	 * @throws Exception
+	 * @throws ReflectionException
+	 */
 	public function setContainer(ContainerInterface $container): void
 	{
 		$this->container = $container;

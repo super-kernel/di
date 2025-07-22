@@ -5,10 +5,6 @@ namespace SuperKernel\Di\Contract;
 
 use Composer\Autoload\ClassLoader;
 
-/**
- * @ConfigProviderInterface
- * @\SuperKernel\Di\Contract\ConfigProviderInterface
- */
 interface ConfigProviderInterface
 {
 	public function getClassLoader(): ClassLoader;
