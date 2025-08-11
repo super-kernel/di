@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Tests\App\Aop\Scanner\Driver;
 
-use SuperKernel\Di\Abstract\ScanHandlerAbstract;
 use SuperKernel\Di\Exception\Exception;
 use Tests\App\Aop\Scanner\Scanned;
+use Tests\App\ScanHandlerAbstract;
 use function pcntl_fork;
 use function pcntl_wait;
 

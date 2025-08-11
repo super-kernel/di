@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Tests\App\Aop\Scanner\Driver;
 
-use SuperKernel\Di\Abstract\ScanHandlerAbstract;
 use Swoole\Process;
+use Tests\App\ScanHandlerAbstract;
 
 final class SwooleProcessScanHandler extends ScanHandlerAbstract
 {

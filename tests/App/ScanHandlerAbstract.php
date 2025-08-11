@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace SuperKernel\Di\Abstract;
+namespace Tests\App;
 
 use SuperKernel\Di\Container;
 use SuperKernel\Di\Contract\ScanHandlerInterface;
