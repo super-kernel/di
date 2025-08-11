@@ -20,13 +20,11 @@ final class Factory implements AnnotationInterface
 	}
 
 	/**
-	 * @param Reflector               $reflector
+	 * @param Reflector $reflector
 	 *
-	 * @phpstan-param ReflectionClass $reflector
-	 *
-	 * @return mixed
+	 * @return void
 	 */
-	public function process(Reflector $reflector): mixed
+	public function process(Reflector $reflector): void
 	{
 	}
 }

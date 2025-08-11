@@ -16,7 +16,7 @@ final class Definer
 	{
 	}
 
-	public function process(string $class, mixed $default = null): mixed
+	public function process(string $class, mixed $default = null): void
 	{
 	}
 }
