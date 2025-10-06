@@ -1,0 +1,31 @@
+{
+    "name": "super-kernel/di",
+    "type": "library",
+    "license": "MIT",
+    "description": "The di for super kernel framework.",
+    "keywords": [
+        "php",
+        "swoole",
+        "super-kernel",
+        "di",
+        "container"
+    ],
+    "autoload": {
+        "psr-4": {
+            "SuperKernel\\Di\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.4",
+        "super-kernel/attribute": "*",
+        "super-kernel/contract": "*",
+        "symfony/filesystem": "^7.3"
+    },
+    "authors": [
+        {
+            "name": "wheakerd",
+            "email": "wheakerd@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
