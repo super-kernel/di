@@ -23,10 +23,6 @@ final class FactoryDefiner extends DefinerAbstract implements DefinerInterface
 	 */
 	public function support(string $id): bool
 	{
-		if (!(class_exists($id) || interface_exists($id))) {
-			return false;
-		}
-
 		$classname = $this->getRealEntry($id);
 
 		if (null === $classname) {

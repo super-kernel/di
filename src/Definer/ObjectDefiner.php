@@ -10,7 +10,7 @@ use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Exception\InvalidDefinitionException;
 
-#[Definer(priority: 1)]
+#[Definer]
 final class ObjectDefiner extends DefinerAbstract implements DefinerInterface
 {
 	/**

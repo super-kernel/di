@@ -16,7 +16,7 @@ use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Exception\InvalidDefinitionException;
 
-#[Resolver(2)]
+#[Resolver]
 final class ObjectResolver implements ResolverInterface
 {
 	private ?ResolverFactoryInterface $resolverDispatcher = null {
@@ -76,12 +76,6 @@ final class ObjectResolver implements ResolverInterface
 
 		return $reflectClass->newLazyProxy(function (object $object) use ($reflectClass, $arguments, $definition) {
 			try {
-				$constructor = $reflectClass->getConstructor();
-
-				if (null === $constructor || !$constructor->isPublic()) {
-					return $object;
-				}
-
 				return new $object(...$arguments);
 			}
 			catch (ReflectionException $e) {
