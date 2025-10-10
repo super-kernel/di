@@ -10,7 +10,6 @@ use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
 use SuperKernel\Attribute\Contract;
-use SuperKernel\Attribute\Factory;
 use SuperKernel\Contract\ReflectionManagerInterface;
 
 /**
@@ -24,16 +23,19 @@ use SuperKernel\Contract\ReflectionManagerInterface;
  */
 #[
 	Contract(ReflectionManagerInterface::class),
-	Factory,
 ]
 final class ReflectionManager
 {
-	private static ?ReflectionManagerInterface $instance = null;
+	private static ?ReflectionManagerInterface $reflectionManager = null;
 
-	public function __invoke(): ReflectionManagerInterface
+	public function __invoke(array $attributes): ReflectionManagerInterface
 	{
-		return self::$instance ??= new class implements ReflectionManagerInterface {
+		return self::$reflectionManager ??= new class($attributes) implements ReflectionManagerInterface {
 			private static array $containers = [];
+
+			public function __construct(private readonly array $attributes)
+			{
+			}
 
 			public function reflectClass(string $class): ReflectionClass
 			{
@@ -78,17 +80,7 @@ final class ReflectionManager
 
 			public function getAttributes(string $name): array
 			{
-				if (null === self::$containers) {
-					if (false === defined('ANNOTATIONS')) {
-						throw new RuntimeException('Annotations not defined');
-					}
-
-					self::$containers = constant('ANNOTATIONS');
-				}
-
-				$annotations = constant('ANNOTATIONS')[$name] ?? [];
-
-				return is_array($annotations) ? $annotations : [];
+				return $this->attributes[$name] ?? [];
 			}
 
 			public function getClassAnnotations(string $classname, ?string $attributeName = null): array
@@ -110,10 +102,12 @@ final class ReflectionManager
 
 	public static function __callStatic(string $name, array $arguments): mixed
 	{
-		self::$instance ??= new self()();
+		if (null === self::$reflectionManager) {
+			throw new RuntimeException('ReflectionManager not initialized.');
+		}
 
-		if (method_exists(self::$instance, $name)) {
-			return self::$instance->$name(...$arguments);
+		if (method_exists(self::$reflectionManager, $name)) {
+			return self::$reflectionManager->$name(...$arguments);
 		}
 
 		throw new RuntimeException("Method $name does not exist.");

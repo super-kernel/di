@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace SuperKernel\Di;
 
 use Psr\Container\ContainerInterface as PsrContainerInterface;
+use SuperKernel\Contract\ReflectionManagerInterface;
+use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Contract\ContainerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
@@ -15,26 +17,28 @@ use SuperKernel\Di\Factory\ResolverFactory;
  * Containers only manage long-lived objects, and short-lived objects are managed by the
  * caller {@see https://www.php-fig.org/psr/psr-11/}.
  */
-abstract class Container implements ContainerInterface
+final class Container implements ContainerInterface
 {
-
 	private readonly DefinitionFactoryInterface $definitionFactory;
 
 	private readonly ResolverFactoryInterface $resolverFactory;
 
 	private array $resolverEntries;
 
-	final public function __construct()
+	final public function __construct(array $attributes)
 	{
+		$reflectionManager       = new ReflectionManager()($attributes);
 		$this->resolverFactory   = new ResolverFactory($this);
 		$this->definitionFactory = new DefinitionFactory();
 
 		$this->resolverEntries = [
 			self::class                       => $this,
+			ReflectionManager::class          => $reflectionManager,
 			ContainerInterface::class         => $this,
 			PsrContainerInterface::class      => $this,
 			ResolverFactoryInterface::class   => $this->resolverFactory,
 			DefinitionFactoryInterface::class => $this->definitionFactory,
+			ReflectionManagerInterface::class => $reflectionManager,
 		];
 	}
 
