@@ -29,7 +29,11 @@ final class FactoryDefiner extends DefinerAbstract implements DefinerInterface
 			return false;
 		}
 
-		return array_any(ReflectionManager::getClassAnnotations($classname), fn(ReflectionAttribute $attribute) => $attribute->getName() === Factory::class);
+		if (class_exists($classname) || interface_exists($classname)) {
+			return array_any(ReflectionManager::getClassAnnotations($classname), fn(ReflectionAttribute $attribute) => $attribute->getName() === Factory::class);
+		}
+
+		return false;
 	}
 
 	/**
