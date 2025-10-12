@@ -23,10 +23,6 @@ abstract class DefinerAbstract
 			return $this->entries[$id];
 		}
 
-		if (!interface_exists($id)) {
-			return $id;
-		}
-
 		/* @var array<string> $annotations */
 		$classes = ReflectionManager::getAttributes(Contract::class);
 
@@ -53,6 +49,10 @@ abstract class DefinerAbstract
 					$priority  = $attributeInstance->priority;
 				}
 			}
+		}
+
+		if (null === $classname && !interface_exists($id)) {
+			return $id;
 		}
 
 		return $this->entries[$id] = $classname;

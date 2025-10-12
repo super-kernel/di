@@ -31,14 +31,14 @@ final class ObjectDefiner extends DefinerAbstract implements DefinerInterface
 	 */
 	public function create(string $id): DefinitionInterface
 	{
-		if (!interface_exists($id)) {
-			return new ObjectDefinition($id);
-		}
-
 		$classname = $this->getRealEntry($id);
 
 		if (null === $classname) {
 			throw new InvalidDefinitionException("No definition found for entry $id");
+		}
+
+		if (!interface_exists($id)) {
+			return new ObjectDefinition($id, $classname);
 		}
 
 		if (is_subclass_of($classname, $id)) {

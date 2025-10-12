@@ -44,10 +44,6 @@ final class FactoryDefiner extends DefinerAbstract implements DefinerInterface
 	 */
 	public function create(string $id): DefinitionInterface
 	{
-		if (!interface_exists($id)) {
-			return new FactoryDefinition($id);
-		}
-
 		$classname = $this->getRealEntry($id);
 
 		if (null === $classname) {
