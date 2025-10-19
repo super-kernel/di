@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace SuperKernel\Di;
 
 use Psr\Container\ContainerInterface as PsrContainerInterface;
-use SuperKernel\Contract\ReflectionManagerInterface;
-use SuperKernel\Di\Collector\ReflectionManager;
+use SuperKernel\Contract\AttributeCollectorInterface;
+use SuperKernel\Contract\ReflectionCollectorInterface;
+use SuperKernel\Di\Collector\AttributeCollector;
+use SuperKernel\Di\Collector\ReflectionCollector;
 use SuperKernel\Di\Contract\ContainerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
@@ -27,18 +29,21 @@ final class Container implements ContainerInterface
 
 	final public function __construct(array $attributes)
 	{
-		$reflectionManager       = new ReflectionManager()($attributes);
+		$attributeCollector      = new AttributeCollector($this, $attributes);
+		$reflectionCollector     = new ReflectionCollector();
 		$this->resolverFactory   = new ResolverFactory($this);
-		$this->definitionFactory = new DefinitionFactory();
+		$this->definitionFactory = new DefinitionFactory($this);
 
 		$this->resolverEntries = [
-			self::class                       => $this,
-			ReflectionManager::class          => $reflectionManager,
-			ContainerInterface::class         => $this,
-			PsrContainerInterface::class      => $this,
-			ResolverFactoryInterface::class   => $this->resolverFactory,
-			DefinitionFactoryInterface::class => $this->definitionFactory,
-			ReflectionManagerInterface::class => $reflectionManager,
+			self::class                         => $this,
+			ReflectionCollector::class          => $reflectionCollector,
+			AttributeCollector::class           => $attributeCollector,
+			ContainerInterface::class           => $this,
+			PsrContainerInterface::class        => $this,
+			ResolverFactoryInterface::class     => $this->resolverFactory,
+			DefinitionFactoryInterface::class   => $this->definitionFactory,
+			ReflectionCollectorInterface::class => $reflectionCollector,
+			AttributeCollectorInterface::class  => $attributeCollector,
 		];
 	}
 
@@ -52,7 +57,14 @@ final class Container implements ContainerInterface
 			return $this->resolverEntries[$id];
 		}
 
-		return $this->resolverEntries[$id] ??= $this->make($id);
+		$definition = $this->definitionFactory->getDefinition($id);
+
+		if (!$definition) {
+			throw new NotFoundException(
+				sprintf('Identifier "%s" is not defined.', $id));
+		}
+
+		return $this->resolverEntries[$id] ??= $this->resolverFactory->getResolver($definition)->resolve($definition);
 	}
 
 	/**
@@ -64,33 +76,6 @@ final class Container implements ContainerInterface
 			return true;
 		}
 
-		if ($this->definitionFactory->hasDefinition($id)) {
-			return true;
-		}
-
-		return $this->definitionFactory->getDefinition($id)?->isInstantiable() ?? false;
-	}
-
-	/**
-	 * Containers only manage long-lived objects, and short-lived objects are managed by the caller. Therefore, this
-	 * method independently allows the caller to create short-lived objects.
-	 *
-	 * @param string $id
-	 * @param array  $parameters
-	 *
-	 * @return mixed
-	 *
-	 * @throws NotFoundException
-	 */
-	final public function make(string $id, array $parameters = []): mixed
-	{
-		$definition = $this->definitionFactory->getDefinition($id);
-
-		if (!$definition) {
-			throw new NotFoundException(
-				sprintf('Identifier "%s" is not defined.', $id));
-		}
-
-		return $this->resolverFactory->getResolver($definition)->resolve($definition, $parameters);
+		return $this->definitionFactory->hasDefinition($id);
 	}
 }

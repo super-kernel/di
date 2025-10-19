@@ -7,7 +7,5 @@ interface DefinitionFactoryInterface
 {
 	public function getDefinition(string $id): ?DefinitionInterface;
 
-	public function getDefinitions(): array;
-
 	public function hasDefinition(string $id): bool;
 }

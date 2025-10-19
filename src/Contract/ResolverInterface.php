@@ -7,5 +7,5 @@ interface ResolverInterface
 {
 	public function support(DefinitionInterface $definition): bool;
 
-	public function resolve(DefinitionInterface $definition, array $parameters = []): mixed;
+	public function resolve(DefinitionInterface $definition): mixed;
 }

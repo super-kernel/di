@@ -8,13 +8,12 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use ReflectionException;
 use ReflectionMethod;
+use SuperKernel\Contract\ReflectionCollectorInterface;
 use SuperKernel\Di\Annotation\Resolver;
-use SuperKernel\Di\Collector\ReflectionManager;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 use SuperKernel\Di\Definition\ParameterDefinition;
-use SuperKernel\Di\Exception\CircularDependencyException;
 use SuperKernel\Di\Exception\InvalidDefinitionException;
 
 #[Resolver(3)]
@@ -22,6 +21,10 @@ final class ParameterResolver implements ResolverInterface
 {
 	private ?ResolverInterface $resolverDispatcher = null {
 		get => $this->resolverDispatcher ??= $this->container->get(ResolverFactoryInterface::class);
+	}
+
+	private ?ReflectionCollectorInterface $reflectionCollector = null {
+		get => $this->reflectionCollector ??= $this->container->get(ReflectionCollectorInterface::class);
 	}
 
 	public function __construct(private readonly ContainerInterface $container)
@@ -40,7 +43,6 @@ final class ParameterResolver implements ResolverInterface
 
 	/**
 	 * @param DefinitionInterface $definition
-	 * @param array               $parameters
 	 *
 	 * @return array
 	 * @throws ContainerExceptionInterface
@@ -48,7 +50,7 @@ final class ParameterResolver implements ResolverInterface
 	 * @throws NotFoundExceptionInterface
 	 * @throws ReflectionException
 	 */
-	public function resolve(DefinitionInterface $definition, array $parameters = []): array
+	public function resolve(DefinitionInterface $definition): array
 	{
 		if (!$definition instanceof ParameterDefinition) {
 			throw InvalidDefinitionException::create(
@@ -57,40 +59,29 @@ final class ParameterResolver implements ResolverInterface
 			);
 		}
 
-		return $this->resolveMethodParameters($definition->getReflectionMethod(), $parameters);
+		$reflectionMethod = $this->reflectionCollector->reflectMethod($definition->getName(), $definition->getMethodName());
+
+		return $this->resolveMethodParameters($reflectionMethod);
 	}
 
 	/**
-	 * @param ReflectionMethod|null $reflectionMethod
-	 * @param array                 $parameters
+	 * @param ReflectionMethod $reflectionMethod
 	 *
 	 * @return array
-	 * @throws InvalidDefinitionException
 	 * @throws ContainerExceptionInterface
+	 * @throws InvalidDefinitionException
 	 * @throws NotFoundExceptionInterface
 	 * @throws ReflectionException
 	 */
-	public function resolveMethodParameters(?ReflectionMethod $reflectionMethod = null, array $parameters = []): array
+	public function resolveMethodParameters(ReflectionMethod $reflectionMethod): array
 	{
-		if (null === $reflectionMethod) {
-			return [];
-		}
-
 		$arguments = [];
 
-		foreach ($reflectionMethod->getParameters() as $index => $parameter) {
+		foreach ($reflectionMethod->getParameters() as $parameter) {
 			$parameterName = $parameter->getName();
-			if (!empty($parameters)) {
-				if (isset($parameters[$parameterName]) || array_key_exists($parameterName, $parameters)) {
-					$arguments[] = &$parameters[$parameterName];
-					continue;
-				} elseif (isset($parameters[$index]) || array_key_exists($index, $parameters)) {
-					$arguments[] = &$parameters[$index];
-					continue;
-				}
-			}
 
 			$typeName = $parameter->getType()?->getName();
+
 
 			if (is_string($typeName) && $this->container->has($typeName)) {
 				$arguments[] = $this->container->get($typeName);

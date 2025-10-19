@@ -37,20 +37,16 @@ final class FactoryResolver implements ResolverInterface
 
 	/**
 	 * @param FactoryDefinition $definition
-	 * @param array             $parameters
 	 *
 	 * @return mixed
-	 * @throws ContainerExceptionInterface
-	 * @throws NotFoundExceptionInterface
 	 */
-	public function resolve(DefinitionInterface $definition, array $parameters = []): mixed
+	public function resolve(DefinitionInterface $definition): mixed
 	{
-		$classname           = $definition->getClassname();
-		$name                = $definition->getName();
-		$objectDefinition    = new ObjectDefinition($name, $classname);
-		$object              = $this->resolverDispatcher->getResolver($objectDefinition)->resolve($objectDefinition, $parameters);
+		$classname           = $definition->getName();
+		$objectDefinition    = new ObjectDefinition($classname);
+		$object              = $this->resolverDispatcher->getResolver($objectDefinition)->resolve($objectDefinition);
 		$parameterDefinition = new ParameterDefinition($classname, '__invoke');
-		$arguments           = $this->resolverDispatcher->getResolver($parameterDefinition)->resolve($parameterDefinition, $parameters);
+		$arguments           = $this->resolverDispatcher->getResolver($parameterDefinition)->resolve($parameterDefinition);
 
 		return $object(...$arguments);
 	}

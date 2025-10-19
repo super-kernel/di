@@ -6,9 +6,9 @@ namespace SuperKernel\Di\Annotation;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-final readonly class Inject
+final readonly class Autowired
 {
-	public function __construct(public ?string $value = null)
+	public function __construct()
 	{
 	}
 }

@@ -7,7 +7,5 @@ interface DefinitionInterface
 {
 	public function getName(): string;
 
-	public function isInstantiable(): bool;
-
 	public function __toString(): string;
 }

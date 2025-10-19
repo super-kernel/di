@@ -5,10 +5,13 @@ namespace SuperKernel\Di\Definition;
 
 use SuperKernel\Di\Contract\DefinitionInterface;
 
-final class FactoryDefinition implements DefinitionInterface
+final readonly class FactoryDefinition implements DefinitionInterface
 {
-	public function __construct(private string $name, private readonly mixed $factory = null)
+	private string $classname;
+
+	public function __construct(string $classname)
 	{
+		$this->classname = $classname;
 	}
 
 	/**
@@ -16,26 +19,7 @@ final class FactoryDefinition implements DefinitionInterface
 	 */
 	public function getName(): string
 	{
-		return $this->name;
-	}
-
-	public function setName(string $name): self
-	{
-		$this->name = $name;
-		return $this;
-	}
-
-	public function getClassname(): string
-	{
-		return $this->factory ?? $this->name;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isInstantiable(): bool
-	{
-		return true;
+		return $this->classname;
 	}
 
 	/**
@@ -43,6 +27,6 @@ final class FactoryDefinition implements DefinitionInterface
 	 */
 	public function __toString(): string
 	{
-		return $this->name;
+		return sprintf('Factory[%s]', $this->getName());
 	}
 }
