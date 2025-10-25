@@ -8,6 +8,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use ReflectionException;
 use ReflectionMethod;
+use ReflectionParameter;
 use SuperKernel\Contract\ReflectionCollectorInterface;
 use SuperKernel\Di\Annotation\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
@@ -61,11 +62,14 @@ final class ParameterResolver implements ResolverInterface
 
 		$reflectionMethod = $this->reflectionCollector->reflectMethod($definition->getName(), $definition->getMethodName());
 
-		return $this->resolveMethodParameters($reflectionMethod);
+		return $this->resolveMethodParameters($reflectionMethod, $definition->getParameters());
 	}
 
 	/**
+	 * Allows developers to build targets with any custom parameters.
+	 *
 	 * @param ReflectionMethod $reflectionMethod
+	 * @param array            $parameters
 	 *
 	 * @return array
 	 * @throws ContainerExceptionInterface
@@ -73,44 +77,58 @@ final class ParameterResolver implements ResolverInterface
 	 * @throws NotFoundExceptionInterface
 	 * @throws ReflectionException
 	 */
-	public function resolveMethodParameters(ReflectionMethod $reflectionMethod): array
+	private function resolveMethodParameters(ReflectionMethod $reflectionMethod, array $parameters): array
 	{
 		$arguments = [];
 
-		foreach ($reflectionMethod->getParameters() as $parameter) {
-			$parameterName = $parameter->getName();
-
-			$typeName = $parameter->getType()?->getName();
-
-
-			if (is_string($typeName) && $this->container->has($typeName)) {
-				$arguments[] = $this->container->get($typeName);
-				continue;
-			}
-
-			if ($parameter->isOptional()) {
-				if ($parameter->isDefaultValueConstant()) {
-					/** @noinspection PhpUnhandledExceptionInspection */
-					$constName = $parameter->getDefaultValueConstantName();
-
-					$arguments[] = constant($constName);
-					continue;
-				}
-				if ($parameter->isDefaultValueAvailable()) {
-					$arguments[] = $parameter->getDefaultValue();
-					continue;
-				}
-			}
-
-			throw new InvalidDefinitionException(
-				sprintf(
-					'The $%s parameter of method %s did not provide a default value',
-					$parameterName,
-					$reflectionMethod->getName(),
-				),
-			);
+		foreach ($reflectionMethod->getParameters() as $reflectionParameter) {
+			$arguments[] = $this->getParameter($reflectionParameter, $parameters);
 		}
 
 		return $arguments;
+	}
+
+	/**
+	 * @param ReflectionParameter $reflectionParameter
+	 * @param array               $parameters
+	 *
+	 * @return mixed
+	 * @throws ContainerExceptionInterface
+	 * @throws InvalidDefinitionException
+	 * @throws NotFoundExceptionInterface
+	 * @throws ReflectionException
+	 */
+	public function getParameter(ReflectionParameter $reflectionParameter, array $parameters): mixed
+	{
+		$name = $reflectionParameter->getName();
+
+		// Return the value if the parameter name exists in the `$parameters` array.
+		if (isset($parameters[$name])) {
+			return $parameters[$name];
+		}
+
+		// Return the value if the parameter name exists in the `$this->container`.
+		if ($reflectionParameter->hasType()) {
+			$id = $reflectionParameter->getType()->getName();
+
+			if ($this->container->has($id)) {
+				return $this->container->get($id);
+			}
+		}
+
+		// Return the value if the parameter name exists default value.
+		if ($reflectionParameter->isOptional()) {
+			if ($reflectionParameter->isDefaultValueConstant()) {
+				/** @noinspection PhpUnhandledExceptionInspection */
+				$constName = $reflectionParameter->getDefaultValueConstantName();
+
+				return constant($constName);
+			}
+			if ($reflectionParameter->isDefaultValueAvailable()) {
+				return $reflectionParameter->getDefaultValue();
+			}
+		}
+
+		throw new InvalidDefinitionException("The $$name parameter did not provide a default value");
 	}
 }

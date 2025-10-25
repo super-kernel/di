@@ -7,7 +7,7 @@ use SuperKernel\Di\Contract\DefinitionInterface;
 
 final readonly class ParameterDefinition implements DefinitionInterface
 {
-	public function __construct(private string $classname, private string $methodName)
+	public function __construct(private string $classname, private string $methodName, private array $parameters = [])
 	{
 	}
 
@@ -22,6 +22,11 @@ final readonly class ParameterDefinition implements DefinitionInterface
 	public function getMethodName(): string
 	{
 		return $this->methodName;
+	}
+
+	public function getParameters(): array
+	{
+		return $this->parameters;
 	}
 
 	/**
