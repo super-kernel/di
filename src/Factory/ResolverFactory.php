@@ -6,8 +6,8 @@ namespace SuperKernel\Di\Factory;
 use Psr\Container\ContainerInterface;
 use SplPriorityQueue;
 use SuperKernel\Contract\AttributeCollectorInterface;
-use SuperKernel\Contract\ReflectionCollectorInterface;
-use SuperKernel\Di\Annotation\Resolver;
+use SuperKernel\Di\Attribute\Resolver;
+use SuperKernel\Di\Collector\Attribute;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
@@ -19,25 +19,18 @@ final class ResolverFactory implements ResolverFactoryInterface
 		get {
 			if (!isset($this->resolvers)) {
 				$this->resolvers = new SplPriorityQueue;
-
-				/* @var array<Resolver> $attributes */
-				foreach ($this->attributeCollector->getAttributes(Resolver::class) as $resolver => $attributes) {
-					foreach ($attributes as $attribute) {
-						$this->resolvers->insert(new $resolver($this->container), $attribute->priority);
-					}
+				/* @var Attribute $attribute */
+				foreach ($this->attributeCollector->getAttributes(Resolver::class) as $attribute) {
+					$resolver = $attribute->class;
+					$this->resolvers->insert(new $resolver($this->container), $attribute->attribute->priority);
 				}
 			}
-
 			return $this->resolvers;
 		}
 	}
 
 	private ?AttributeCollectorInterface $attributeCollector = null {
 		get => $this->attributeCollector ??= $this->container->get(AttributeCollectorInterface::class);
-	}
-
-	private ?ReflectionCollectorInterface $reflectionManager = null {
-		get => $this->reflectionManager ??= $this->container->get(ReflectionCollectorInterface::class);
 	}
 
 	public function __construct(private readonly ContainerInterface $container)

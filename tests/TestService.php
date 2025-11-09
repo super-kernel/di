@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 namespace SuperKernelTest\Di;
 
-use SuperKernel\Di\Annotation\Autowired;
+use SuperKernel\Di\Attribute\Autowired;
 use Symfony\Component\Console\Output\OutputInterface;
 
 final class TestService
 {
 	#[Autowired]
-	private OutputInterface $output;
+	protected OutputInterface $output;
 
 	public function test(): void
 	{

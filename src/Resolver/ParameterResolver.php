@@ -10,7 +10,7 @@ use ReflectionException;
 use ReflectionMethod;
 use ReflectionParameter;
 use SuperKernel\Contract\ReflectionCollectorInterface;
-use SuperKernel\Di\Annotation\Resolver;
+use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
@@ -20,10 +20,6 @@ use SuperKernel\Di\Exception\InvalidDefinitionException;
 #[Resolver(3)]
 final class ParameterResolver implements ResolverInterface
 {
-	private ?ResolverInterface $resolverDispatcher = null {
-		get => $this->resolverDispatcher ??= $this->container->get(ResolverFactoryInterface::class);
-	}
-
 	private ?ReflectionCollectorInterface $reflectionCollector = null {
 		get => $this->reflectionCollector ??= $this->container->get(ReflectionCollectorInterface::class);
 	}

@@ -6,12 +6,14 @@ namespace SuperKernel\Di\Resolver;
 use Psr\Container\ContainerInterface;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionUnionType;
 use SuperKernel\Contract\ReflectionCollectorInterface;
-use SuperKernel\Di\Annotation\Autowired;
-use SuperKernel\Di\Annotation\Resolver;
+use SuperKernel\Di\Attribute\Autowired;
+use SuperKernel\Di\Attribute\Resolver;
+use SuperKernel\Di\Collector\ReflectionCollector;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
@@ -28,6 +30,10 @@ final class ObjectResolver implements ResolverInterface
 		get => $this->resolverDispatcher ??= $this->container->get(ResolverFactoryInterface::class);
 	}
 
+	/**
+	 * @var ReflectionCollectorInterface|null
+	 * @psalm-var ReflectionCollector
+	 */
 	private ?ReflectionCollectorInterface $reflectionCollector = null {
 		get => $this->reflectionCollector ??= $this->container->get(ReflectionCollectorInterface::class);
 	}
@@ -43,17 +49,7 @@ final class ObjectResolver implements ResolverInterface
 	 */
 	public function support(DefinitionInterface $definition): bool
 	{
-		if (!($definition instanceof ObjectDefinition)) {
-			return false;
-		}
-
-		$classname = $definition->getName();
-
-		if (!class_exists($classname) || interface_exists($classname)) {
-			return false;
-		}
-
-		return $this->reflectionCollector->reflectClass($classname)->isInstantiable();
+		return $definition instanceof ObjectDefinition;
 	}
 
 	/**
@@ -61,6 +57,7 @@ final class ObjectResolver implements ResolverInterface
 	 *
 	 * @return object
 	 * @throws InvalidDefinitionException
+	 * @throws ReflectionException
 	 */
 	public function resolve(DefinitionInterface $definition): object
 	{

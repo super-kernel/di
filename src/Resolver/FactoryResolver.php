@@ -3,10 +3,8 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Resolver;
 
-use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
-use SuperKernel\Di\Annotation\Resolver;
+use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Definition\ObjectDefinition;

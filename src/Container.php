@@ -27,10 +27,10 @@ final class Container implements ContainerInterface
 
 	private array $resolverEntries;
 
-	final public function __construct(array $attributes)
+	final public function __construct()
 	{
-		$attributeCollector      = new AttributeCollector($this, $attributes);
 		$reflectionCollector     = new ReflectionCollector();
+		$attributeCollector      = new AttributeCollector($reflectionCollector);
 		$this->resolverFactory   = new ResolverFactory($this);
 		$this->definitionFactory = new DefinitionFactory($this);
 

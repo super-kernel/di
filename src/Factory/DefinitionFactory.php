@@ -7,8 +7,8 @@ use Psr\Container\ContainerInterface;
 use SplPriorityQueue;
 use SuperKernel\Attribute\Provider;
 use SuperKernel\Contract\AttributeCollectorInterface;
-use SuperKernel\Contract\ReflectionCollectorInterface;
-use SuperKernel\Di\Annotation\Definer;
+use SuperKernel\Di\Attribute\Definer;
+use SuperKernel\Di\Collector\Attribute;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
@@ -22,25 +22,18 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 		get {
 			if (!isset($this->definers)) {
 				$this->definers = new SplPriorityQueue;
-
-				foreach ($this->attributeCollector->getAttributes(Definer::class) as $definer => $attributes) {
-					/* @var Definer $attribute */
-					foreach ($attributes as $attribute) {
-						$this->definers->insert(new $definer($this->container), $attribute->priority);
-					}
+				/* @var Attribute $attribute */
+				foreach ($this->attributeCollector->getAttributes(Definer::class) as $attribute) {
+					$definer = $attribute->class;
+					$this->definers->insert(new $definer($this->container), $attribute->attribute->priority);
 				}
 			}
-
 			return $this->definers;
 		}
 	}
 
 	private ?AttributeCollectorInterface $attributeCollector = null {
 		get => $this->attributeCollector ??= $this->container->get(AttributeCollectorInterface::class);
-	}
-
-	private ?ReflectionCollectorInterface $reflectionManager = null {
-		get => $this->reflectionManager ??= $this->container->get(ReflectionCollectorInterface::class);
 	}
 
 	public function __construct(private readonly ContainerInterface $container)

@@ -22,21 +22,13 @@
     },
     "require": {
         "php": ">=8.4",
-        "super-kernel/attribute": "1.1.*",
-        "super-kernel/contract": "1.1.*",
-        "symfony/filesystem": "^7.3"
+        "super-kernel/contract": "*"
     },
-    "authors": [
-        {
-            "name": "wheakerd",
-            "email": "wheakerd@gmail.com"
-        }
-    ],
     "minimum-stability": "stable",
     "require-dev": {
-        "super-kernel/event-dispatcher": "^1.0",
-        "super-kernel/logger": "^1.0",
-        "super-kernel/framework": "^1.0",
-        "super-kernel/command": "^1.0"
+        "super-kernel/event-dispatcher": "@dev",
+        "super-kernel/logger": "@dev",
+        "super-kernel/framework": "@dev",
+        "super-kernel/command": "@dev"
     }
 }

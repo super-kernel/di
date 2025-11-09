@@ -3,11 +3,12 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Collector;
 
-use Psr\Container\ContainerInterface;
+use Composer\Autoload\ClassLoader;
+use RuntimeException;
 use SuperKernel\Attribute\Provider;
-use SuperKernel\Contract\AttributeCollectorInterface;
-use SuperKernel\Contract\ReflectionCollectorInterface;
-use SuperKernel\Di\Exception\NotFoundException;
+use SuperKernel\Di\Contract\AttributeCollectorInterface;
+use SuperKernel\Di\Contract\ReflectionCollectorInterface;
+use Throwable;
 
 #[
 	Provider(AttributeCollector::class),
@@ -17,74 +18,57 @@ final class AttributeCollector implements AttributeCollectorInterface
 {
 	private array $attributes;
 
-	private array $containers = [];
-
-	private array $realEntries = [];
-
-	private ?ReflectionCollectorInterface $reflectionCollector = null {
-		get => $this->reflectionCollector ??= $this->container->get(ReflectionCollectorInterface::class);
-	}
-
-	public function __construct(private readonly ContainerInterface $container, array $attributes)
-	{
-		$this->attributes = $attributes;
-	}
-
-	/**
-	 * @param string $attributeName
-	 *
-	 * @return array<string, array<object>>
-	 */
-	public function getAttributes(string $attributeName): array
-	{
-		if (!isset($this->containers[$attributeName])) {
-			$instances = [];
-			$classes   = $this->attributes[$attributeName] ?? [];
-
-			foreach ($classes as $class) {
-				$attributes = $this->reflectionCollector->getAttributesByClass($class, $attributeName);
-
-				foreach ($attributes as $attribute) {
-					if ($attribute->getName() === $attributeName) {
-						$instances[$class][] = $attribute->newInstance();
+	private ?ClassLoader $classLoader = null {
+		get {
+			if (null === $this->classLoader) {
+				foreach (spl_autoload_functions() as [$loader]) {
+					if ($loader instanceof ClassLoader) {
+						$this->classLoader = $loader;
+						break;
 					}
 				}
+				if (null === $this->classLoader) {
+					throw new RuntimeException('Composer loader not found.');
+				}
 			}
-
-			$this->containers[$attributeName] = $instances;
+			return $this->classLoader;
 		}
-
-		return $this->containers[$attributeName];
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * @throws NotFoundException
+	 * @param ReflectionCollectorInterface $reflectionCollector
+	 *
+	 * @psalm-param ReflectionCollector    $reflectionCollector
 	 */
-	public function getRealEntry(string $id): string
+	public function __construct(ReflectionCollectorInterface $reflectionCollector)
 	{
-		if (isset($this->realEntries[$id]) || array_key_exists($id, $this->realEntries)) {
-			return $this->realEntries[$id];
-		}
-
-		$class    = $id;
-		$priority = 0;
-
-		/* @var array<Provider> $attributes */
-		foreach ($this->getAttributes(Provider::class) as $classname => $attributes) {
-			foreach ($attributes as $attribute) {
-				if ($attribute->class === $id && $attribute->priority >= $priority) {
-					$class    = $classname;
-					$priority = $attribute->priority;
-				}
+		foreach ($this->classLoader->getClassMap() as $class => $path) {
+			try {
+				$reflectionClass = $reflectionCollector->reflectClass($class);
+			}
+				// Given that some component designs may have non-standard issues, it is necessary to use `\Throwable` to skip the loop here.
+			catch (Throwable) {
+				continue;
+			}
+			foreach ($reflectionClass->getAttributes() as $attribute) {
+				$this->attributes[$attribute->getName()][] = new Attribute($class, $attribute->newInstance());
 			}
 		}
+	}
 
-		if (interface_exists($class)) {
-			throw new NotFoundException("No provider found for $id");
+	public function getAttributes(string $name, int $flags = 0): array
+	{
+		if ($flags !== AttributeCollectorInterface::IS_INSTANCEOF) {
+			return isset($this->attributes[$name]) ? [$this->attributes[$name]] : [];
 		}
 
-		return $this->realEntries[$id] = $class;
+		$attributes = [];
+		foreach ($this->attributes as $attribute) {
+			if ($attribute->attribute instanceof $name) {
+				$attributes[] = $attribute;
+			}
+		}
+		return $attributes;
 	}
 
 	private function __clone(): void

@@ -3,23 +3,24 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Definer;
 
-use SuperKernel\Contract\AttributeCollectorInterface;
-use SuperKernel\Contract\ReflectionCollectorInterface;
-use SuperKernel\Di\Annotation\Definer;
+use ReflectionException;
+use SuperKernel\Di\Attribute\Definer;
+use SuperKernel\Di\Collector\ReflectionCollector;
 use SuperKernel\Di\Contract\ContainerInterface;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
+use SuperKernel\Di\Contract\ReflectionCollectorInterface;
 use SuperKernel\Di\Definition\ObjectDefinition;
 
 #[Definer]
 final class ObjectDefiner implements DefinerInterface
 {
+	/**
+	 * @var ReflectionCollectorInterface|null
+	 * @psalm-var ReflectionCollector
+	 */
 	private ?ReflectionCollectorInterface $reflectionCollector = null {
 		get => $this->reflectionCollector ??= $this->container->get(ReflectionCollectorInterface::class);
-	}
-
-	private ?AttributeCollectorInterface $attributeCollector = null {
-		get => $this->attributeCollector ??= $this->container->get(AttributeCollectorInterface::class);
 	}
 
 	public function __construct(private readonly ContainerInterface $container)
@@ -33,7 +34,14 @@ final class ObjectDefiner implements DefinerInterface
 	 */
 	public function support(string $id): bool
 	{
-		return class_exists($id) || interface_exists($id);
+		try {
+			$reflectionClass = $this->reflectionCollector->reflectClass($id);
+		}
+		catch (ReflectionException) {
+			return false;
+		}
+
+		return $reflectionClass->isInstantiable();
 	}
 
 	/**
@@ -43,6 +51,6 @@ final class ObjectDefiner implements DefinerInterface
 	 */
 	public function create(string $id): DefinitionInterface
 	{
-		return new ObjectDefinition($this->attributeCollector->getRealEntry($id));
+		return new ObjectDefinition($id);
 	}
 }
