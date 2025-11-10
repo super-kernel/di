@@ -5,10 +5,10 @@ namespace SuperKernel\Di\Factory;
 
 use Psr\Container\ContainerInterface;
 use SplPriorityQueue;
-use SuperKernel\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Attribute\Provider;
 use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Collector\Attribute;
+use SuperKernel\Di\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
