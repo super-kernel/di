@@ -20,15 +20,19 @@
             "SuperKernelTest\\Di\\": "tests/"
         }
     },
+    "minimum-stability": "stable",
     "require": {
         "php": ">=8.4",
         "super-kernel/contract": "*"
     },
-    "minimum-stability": "stable",
     "require-dev": {
         "super-kernel/event-dispatcher": "@dev",
         "super-kernel/logger": "@dev",
         "super-kernel/framework": "@dev",
         "super-kernel/command": "@dev"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "classmap-authoritative": true
     }
 }
