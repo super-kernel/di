@@ -59,7 +59,7 @@ final class AttributeCollector implements AttributeCollectorInterface
 	public function getAttributes(string $name, int $flags = 0): array
 	{
 		if ($flags !== AttributeCollectorInterface::IS_INSTANCEOF) {
-			return isset($this->attributes[$name]) ? [$this->attributes[$name]] : [];
+			return $this->attributes[$name] ?? [];
 		}
 
 		$attributes = [];
