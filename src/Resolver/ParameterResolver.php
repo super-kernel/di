@@ -12,7 +12,6 @@ use ReflectionParameter;
 use SuperKernel\Contract\ReflectionCollectorInterface;
 use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
-use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 use SuperKernel\Di\Definition\ParameterDefinition;
 use SuperKernel\Di\Exception\InvalidDefinitionException;

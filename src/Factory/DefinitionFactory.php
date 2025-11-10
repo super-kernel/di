@@ -5,10 +5,9 @@ namespace SuperKernel\Di\Factory;
 
 use Psr\Container\ContainerInterface;
 use SplPriorityQueue;
-use SuperKernel\Attribute\Provider;
-use SuperKernel\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Attribute\Definer;
-use SuperKernel\Di\Collector\Attribute;
+use SuperKernel\Di\Attribute\Provider;
+use SuperKernel\Di\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
@@ -22,7 +21,6 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 		get {
 			if (!isset($this->definers)) {
 				$this->definers = new SplPriorityQueue;
-				/* @var Attribute $attribute */
 				foreach ($this->attributeCollector->getAttributes(Definer::class) as $attribute) {
 					$definer = $attribute->class;
 					$this->definers->insert(new $definer($this->container), $attribute->attribute->priority);

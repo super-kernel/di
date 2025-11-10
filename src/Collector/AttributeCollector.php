@@ -5,7 +5,7 @@ namespace SuperKernel\Di\Collector;
 
 use Composer\Autoload\ClassLoader;
 use RuntimeException;
-use SuperKernel\Attribute\Provider;
+use SuperKernel\Di\Attribute\Provider;
 use SuperKernel\Di\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Contract\ReflectionCollectorInterface;
 use Throwable;

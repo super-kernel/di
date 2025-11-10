@@ -7,7 +7,7 @@ use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 use ReflectionProperty;
-use SuperKernel\Attribute\Provider;
+use SuperKernel\Di\Attribute\Provider;
 use SuperKernel\Di\Contract\ReflectionCollectorInterface;
 use function get_class;
 use function is_object;
