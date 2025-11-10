@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace SuperKernel\Di;
 
 use Psr\Container\ContainerInterface as PsrContainerInterface;
-use SuperKernel\Contract\AttributeCollectorInterface;
-use SuperKernel\Contract\ReflectionCollectorInterface;
+use SuperKernel\Di\Contract\AttributeCollectorInterface;
+use SuperKernel\Di\Contract\ReflectionCollectorInterface;
 use SuperKernel\Di\Collector\AttributeCollector;
 use SuperKernel\Di\Collector\ReflectionCollector;
 use SuperKernel\Di\Contract\ContainerInterface;
