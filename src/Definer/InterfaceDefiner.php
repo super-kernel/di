@@ -42,7 +42,6 @@ final class InterfaceDefiner implements DefinerInterface
 			}
 
 			$this->containers[$provider->class] = $attribute;
-
 		}
 	}
 
@@ -52,7 +51,9 @@ final class InterfaceDefiner implements DefinerInterface
 			return false;
 		}
 
-		return isset($this->containers[$id]);
+		$attribute = $this->containers[$id] ?? null;
+
+		return $attribute instanceof Attribute;
 	}
 
 	/**
@@ -62,8 +63,8 @@ final class InterfaceDefiner implements DefinerInterface
 	 */
 	public function create(string $id): DefinitionInterface
 	{
-		$class = $this->containers[$id]->attribute->class;
+		$attribute = $this->containers[$id];
 
-		return new InterfaceDefinition($class);
+		return new InterfaceDefinition($attribute->class);
 	}
 }

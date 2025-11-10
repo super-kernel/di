@@ -21,7 +21,6 @@ final class ResolverFactory implements ResolverFactoryInterface
 		get {
 			if (!isset($this->resolvers)) {
 				$this->resolvers = new SplPriorityQueue;
-				/* @var Attribute $attribute */
 				foreach ($this->attributeCollector->getAttributes(Resolver::class) as $attribute) {
 					$resolver = $attribute->class;
 					$this->resolvers->insert(new $resolver($this->container), $attribute->attribute->priority);
