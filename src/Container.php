@@ -27,23 +27,22 @@ final class Container implements ContainerInterface
 
 	private array $resolverEntries;
 
-	final public function __construct()
+	final public function __construct(private readonly AttributeCollectorInterface $attributeCollector)
 	{
 		$reflectionCollector     = new ReflectionCollector();
-		$attributeCollector      = new AttributeCollector($reflectionCollector);
 		$this->resolverFactory   = new ResolverFactory($this);
 		$this->definitionFactory = new DefinitionFactory($this);
 
 		$this->resolverEntries = [
 			self::class                         => $this,
 			ReflectionCollector::class          => $reflectionCollector,
-			AttributeCollector::class           => $attributeCollector,
+			AttributeCollector::class           => $this->attributeCollector,
 			ContainerInterface::class           => $this,
 			PsrContainerInterface::class        => $this,
 			ResolverFactoryInterface::class     => $this->resolverFactory,
 			DefinitionFactoryInterface::class   => $this->definitionFactory,
 			ReflectionCollectorInterface::class => $reflectionCollector,
-			AttributeCollectorInterface::class  => $attributeCollector,
+			AttributeCollectorInterface::class  => $this->attributeCollector,
 		];
 	}
 

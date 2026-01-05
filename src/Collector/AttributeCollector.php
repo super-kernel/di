@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Collector;
 
-use Composer\Autoload\ClassLoader;
-use RuntimeException;
+use ReflectionAttribute;
 use SuperKernel\Di\Attribute\Provider;
+use SuperKernel\Di\Constant\AttributeEnum;
 use SuperKernel\Di\Contract\AttributeCollectorInterface;
-use SuperKernel\Di\Contract\ReflectionCollectorInterface;
-use Throwable;
+use function array_push;
+use function is_a;
 
 #[
 	Provider(AttributeCollector::class),
@@ -18,57 +18,42 @@ final class AttributeCollector implements AttributeCollectorInterface
 {
 	private array $attributes;
 
-	private ?ClassLoader $classLoader = null {
-		get {
-			if (null === $this->classLoader) {
-				foreach (spl_autoload_functions() as [$loader]) {
-					if ($loader instanceof ClassLoader) {
-						$this->classLoader = $loader;
-						break;
-					}
-				}
-				if (null === $this->classLoader) {
-					throw new RuntimeException('Composer loader not found.');
-				}
-			}
-			return $this->classLoader;
+	public function setAttribute(string $class, ReflectionAttribute $reflectionAttribute): void
+	{
+		$this->attributes[$reflectionAttribute->getName()] = new Attribute($class, $reflectionAttribute->newInstance());
+	}
+
+	/**
+	 * @param string                     $class
+	 * @param array<ReflectionAttribute> $attributes
+	 *
+	 * @return void
+	 */
+	public function setAttributes(string $class, array $attributes): void
+	{
+		foreach ($attributes as $attribute) {
+			$this->setAttribute($class, $attribute);
 		}
 	}
 
 	/**
-	 * @param ReflectionCollectorInterface $reflectionCollector
-	 *
-	 * @psalm-param ReflectionCollector    $reflectionCollector
+	 * @inheritDoc
 	 */
-	public function __construct(ReflectionCollectorInterface $reflectionCollector)
+	public function getAttributes(string $attributeName, AttributeEnum $flags = AttributeEnum::EXACT_MATCH): array
 	{
-		foreach ($this->classLoader->getClassMap() as $class => $path) {
-			try {
-				$reflectionClass = $reflectionCollector->reflectClass($class);
-			}
-				// Given that some component designs may have non-standard issues, it is necessary to use `\Throwable` to skip the loop here.
-			catch (Throwable) {
-				continue;
-			}
-			foreach ($reflectionClass->getAttributes() as $attribute) {
-				$this->attributes[$attribute->getName()][] = new Attribute($class, $attribute->newInstance());
-			}
-		}
-	}
-
-	public function getAttributes(string $name, int $flags = 0): array
-	{
-		if ($flags !== AttributeCollectorInterface::IS_INSTANCEOF) {
-			return $this->attributes[$name] ?? [];
+		if ($flags === AttributeEnum::EXACT_MATCH) {
+			return $this->attributes[$attributeName] ?? [];
 		}
 
-		$attributes = [];
-		foreach ($this->attributes as $attribute) {
-			if ($attribute->attribute instanceof $name) {
-				$attributes[] = $attribute;
+		$result = [];
+
+		foreach ($this->attributes as $className => $attributes) {
+			if (is_a($className, $attributeName, true)) {
+				array_push($result, ...$attributes);
 			}
 		}
-		return $attributes;
+
+		return $result;
 	}
 
 	private function __clone(): void

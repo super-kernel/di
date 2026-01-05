@@ -3,23 +3,35 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Contract;
 
+use ReflectionAttribute;
 use SuperKernel\Di\Collector\Attribute;
+use SuperKernel\Di\Constant\AttributeEnum;
 
 interface AttributeCollectorInterface
 {
-	public const int IS_INSTANCEOF = 2;
+	public function setAttribute(string $class, ReflectionAttribute $reflectionAttribute): void;
 
 	/**
-	 * @param string $name  Filter the results to include only
-	 *                      [ReflectionAttribute](https://www.php.net/manual/en/class.reflectionattribute.php)
-	 *                      instances for attributes matching this class name.
-	 * @param int    $flags Flags for determining how to filter the results, if name is provided.
-	 *                      Default is 0 which will only return results for attributes that are of the class name.
-	 *                      The only other option available, is to use
-	 *                      AttributeCollectorInterface::IS_INSTANCEOF,
-	 *                      which will instead use instanceof for filtering.
+	 * @param string                     $class
+	 * @param array<ReflectionAttribute> $attributes
+	 *
+	 * @return void
+	 */
+	public function setAttributes(string $class, array $attributes): void;
+
+	/**
+	 * Returns attribute instances matching the given attribute class name.
+	 *
+	 * @param string        $attributeName Fully qualified class name of the attribute to match.
+	 *
+	 * @param AttributeEnum $flags         Controls how the attribute class name is matched.
+	 *                                     - AttributeEnum::EXACT_MATCH (default): Only attributes whose class name
+	 *                                     exactly matches {@see $attributeName} will be returned.
+	 *                                     - AttributeEnum::IS_INSTANCEOF: Attributes whose class is {@see instanceof}
+	 *                                     {@see $attributeName} will be returned.
 	 *
 	 * @return array<Attribute>
+	 *         A list of instantiated attribute objects matching the given criteria.
 	 */
-	public function getAttributes(string $name, int $flags = 0): array;
+	public function getAttributes(string $attributeName, AttributeEnum $flags = AttributeEnum::EXACT_MATCH): array;
 }
