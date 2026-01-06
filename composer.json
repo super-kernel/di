@@ -20,12 +20,13 @@
             "SuperKernelTest\\Di\\": "tests/"
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "require": {
         "ext-pcntl": "*",
         "php": ">=8.4",
         "super-kernel/contract": "*",
-        "nikic/php-parser": "^5.7"
+        "nikic/php-parser": "^5.7",
+        "super-kernel/attribute": "dev-main"
     },
     "require-dev": {
         "super-kernel/event-dispatcher": "@dev",
@@ -36,5 +37,11 @@
     "config": {
         "optimize-autoloader": true,
         "classmap-authoritative": true
-    }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../attribute"
+        }
+    ]
 }

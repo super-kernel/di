@@ -3,46 +3,31 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Definer;
 
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use SuperKernel\Attribute\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Attribute\Definer;
 use SuperKernel\Di\Attribute\Provider;
-use SuperKernel\Di\Collector\Attribute;
-use SuperKernel\Di\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Definition\InterfaceDefinition;
 
+//  TODO: This class needs to consider collector state transitions.
 #[Definer]
-final class InterfaceDefiner implements DefinerInterface
+final readonly class InterfaceDefiner implements DefinerInterface
 {
-	private ?AttributeCollectorInterface $attributeCollector = null {
-		get => $this->attributeCollector ??= $this->container->get(AttributeCollectorInterface::class);
-	}
+	private AttributeCollectorInterface $attributeCollector;
 
 	/**
-	 * @var array<Attribute>
+	 * @param ContainerInterface $container
+	 *
+	 * @throws ContainerExceptionInterface
+	 * @throws NotFoundExceptionInterface
 	 */
-	private array $containers = [];
-
-	public function __construct(private readonly ContainerInterface $container)
+	public function __construct(private ContainerInterface $container)
 	{
-		foreach ($this->attributeCollector->getAttributes(Provider::class) as $attribute) {
-			/* @var Provider $provider */
-			$provider = $attribute->attribute;
-
-			if (!isset($this->containers[$provider->class])) {
-				$this->containers[$provider->class] = $attribute;
-				continue;
-			}
-
-			$priority = $this->containers[$provider->class]->attribute->priority;
-
-			if ($priority < $provider->priority) {
-				continue;
-			}
-
-			$this->containers[$provider->class] = $attribute;
-		}
+		$this->attributeCollector = $this->container->get(AttributeCollectorInterface::class);
 	}
 
 	public function support(string $id): bool
@@ -51,9 +36,7 @@ final class InterfaceDefiner implements DefinerInterface
 			return false;
 		}
 
-		$attribute = $this->containers[$id] ?? null;
-
-		return $attribute instanceof Attribute;
+		return !empty($this->attributeCollector->getAttributes(Provider::class));
 	}
 
 	/**
@@ -63,8 +46,22 @@ final class InterfaceDefiner implements DefinerInterface
 	 */
 	public function create(string $id): DefinitionInterface
 	{
-		$attribute = $this->containers[$id];
+		$providerAttribute = null;
 
-		return new InterfaceDefinition($attribute->class);
+		foreach ($this->attributeCollector->getAttributes(Provider::class) as $attribute) {
+			if (!$providerAttribute) {
+
+				if ($providerAttribute->attributeInstance->class < $attribute->attributeInstance->priority) {
+					$providerAttribute = $attribute;
+					continue;
+				}
+			}
+
+			if ($attribute->attributeInstance->class === $id) {
+				$providerAttribute = $attribute;
+			}
+		}
+
+		return new InterfaceDefinition($providerAttribute->class);
 	}
 }

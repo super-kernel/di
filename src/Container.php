@@ -4,9 +4,8 @@ declare(strict_types=1);
 namespace SuperKernel\Di;
 
 use Psr\Container\ContainerInterface as PsrContainerInterface;
-use SuperKernel\Di\Contract\AttributeCollectorInterface;
+use SuperKernel\Attribute\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Contract\ReflectionCollectorInterface;
-use SuperKernel\Di\Collector\AttributeCollector;
 use SuperKernel\Di\Collector\ReflectionCollector;
 use SuperKernel\Di\Contract\ContainerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
@@ -35,14 +34,13 @@ final class Container implements ContainerInterface
 
 		$this->resolverEntries = [
 			self::class                         => $this,
-			ReflectionCollector::class          => $reflectionCollector,
-			AttributeCollector::class           => $this->attributeCollector,
 			ContainerInterface::class           => $this,
+			ReflectionCollector::class          => $reflectionCollector,
 			PsrContainerInterface::class        => $this,
 			ResolverFactoryInterface::class     => $this->resolverFactory,
 			DefinitionFactoryInterface::class   => $this->definitionFactory,
-			ReflectionCollectorInterface::class => $reflectionCollector,
 			AttributeCollectorInterface::class  => $this->attributeCollector,
+			ReflectionCollectorInterface::class => $reflectionCollector,
 		];
 	}
 
