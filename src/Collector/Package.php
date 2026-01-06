@@ -12,6 +12,7 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 use SuperKernel\Di\Ast\Visitor\ClassnameExtractor;
 use SuperKernel\Di\Contract\AttributeCollectorInterface;
+use function get_object_vars;
 
 final class Package
 {
@@ -19,7 +20,7 @@ final class Package
 
 	private array $classes = [];
 
-	public function __construct(private readonly string $name)
+	public function __construct(private string $name)
 	{
 	}
 
@@ -39,7 +40,7 @@ final class Package
 
 	public function __serialize(): array
 	{
-		return $this->classes;
+		return get_object_vars($this);
 	}
 
 	public function __invoke(
@@ -71,7 +72,5 @@ final class Package
 
 			$this->classes[] = $classnameExtractor->getClassname();
 		}
-
-		exit();
 	}
 }

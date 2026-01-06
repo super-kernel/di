@@ -20,18 +20,18 @@ final readonly class Scanner
 
 	public function scan(): AttributeCollectorInterface
 	{
+		$canned = $this->scanHandler->scan();
+
+		if ($canned->isScanned()) {
+			return ($this->packageCollector)();
+		}
+
 		foreach (InstalledVersions::getInstalledPackages() as $packageName) {
 			$installPath = InstalledVersions::getInstallPath($packageName);
 
 			if ($installPath) {
 				$this->packageCollector->collect($packageName);
 			}
-		}
-
-		$canned = $this->scanHandler->scan();
-
-		if ($canned->isScanned()) {
-			return ($this->packageCollector)();
 		}
 
 		$this->packageCollector->scan();
