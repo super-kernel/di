@@ -7,32 +7,24 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Annotation\Provider;
+use SuperKernel\Attribute\Attribute;
 use SuperKernel\Attribute\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Attribute\Definer;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Definition\InterfaceDefinition;
 use SuperKernel\Di\Exception\Container\InterfaceResolutionException;
+use function array_any;
 use function interface_exists;
 
 #[Definer]
 final class InterfaceDefiner implements DefinerInterface
 {
-	private AttributeCollectorInterface $attributeCollector {
-		/**
-		 * @throws ContainerExceptionInterface
-		 * @throws NotFoundExceptionInterface
-		 */
-		get {
-			if (!isset($this->attributeCollector)) {
-				$this->attributeCollector = $this->container->get(AttributeCollectorInterface::class);
-			}
-			return $this->attributeCollector;
-		}
-	}
+	private AttributeCollectorInterface $attributeCollector;
 
-	public function __construct(private readonly ContainerInterface $container)
+	public function __construct(ContainerInterface $container)
 	{
+		$this->attributeCollector = $container->get(AttributeCollectorInterface::class);
 	}
 
 	public function support(string $id): bool
@@ -41,14 +33,10 @@ final class InterfaceDefiner implements DefinerInterface
 			return false;
 		}
 
-		try {
-			$this->create($id);
-		}
-		catch (InterfaceResolutionException) {
-			return false;
-		}
-
-		return true;
+		return array_any(
+			$this->attributeCollector->getAttributes(Provider::class),
+			fn(Attribute $attribute) => $id === $attribute->getInstance()->class,
+		);
 	}
 
 	/**

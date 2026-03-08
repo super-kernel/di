@@ -6,6 +6,7 @@ namespace SuperKernel\Di;
 use Psr\Container\ContainerInterface;
 use SuperKernel\Attribute\Contract\AttributeCollectorInterface;
 use SuperKernel\Contract\ReflectorInterface;
+use SuperKernel\Di\Collector\ProviderCollector;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Exception\NotFoundException;
@@ -32,6 +33,7 @@ final class Container implements ContainerInterface
 
 		$this->resolverEntries = [
 			self::class                        => $this,
+			ProviderCollector::class           => new ProviderCollector($this->attributeCollector),
 			ContainerInterface::class          => $this,
 			ReflectorInterface::class          => new ReflectorProvider()(),
 			ResolverFactoryInterface::class    => $this->resolverFactory,
