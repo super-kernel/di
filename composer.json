@@ -1,0 +1,39 @@
+{
+    "name": "super-kernel/di",
+    "type": "library",
+    "license": "MIT",
+    "description": "The di for super kernel framework.",
+    "keywords": [
+        "php",
+        "swoole",
+        "super-kernel",
+        "di",
+        "container"
+    ],
+    "autoload": {
+        "psr-4": {
+            "SuperKernel\\Di\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SuperKernelTest\\Di\\": "tests/src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^8.4",
+        "super-kernel/annotation": "~1.0",
+        "super-kernel/attribute": "~1.0",
+        "super-kernel/contract": "~1.0",
+        "super-kernel/reflection": "~1.0"
+    },
+    "require-dev": {
+        "super-kernel/event-dispatcher": "~1.0",
+        "super-kernel/framework": "~1.0",
+        "symfony/console": "~7.4"
+    }
+}

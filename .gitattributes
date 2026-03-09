@@ -1,0 +1,8 @@
+tests/ export-ignore
+
+.editorconfig export-ignore
+.gitattributes export-ignore
+.phpstorm.meta.php export-ignore
+
+configure export-ignore
+Makefile export-ignore
