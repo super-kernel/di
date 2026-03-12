@@ -6,13 +6,13 @@ namespace SuperKernel\Di\Definer;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use SuperKernel\Contract\ReflectorInterface;
 use SuperKernel\Di\Attribute\Definer;
 use SuperKernel\Di\Collector\ProviderCollector;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Definition\ProviderDefinition;
 use SuperKernel\Di\Exception\Container\ProviderResolutionException;
+use SuperKernel\Reflector\ReflectionManager;
 use function class_exists;
 use function is_null;
 
@@ -32,19 +32,6 @@ final class ProviderDefiner implements DefinerInterface
 		}
 	}
 
-	private ReflectorInterface $reflector {
-		/**
-		 * @throws ContainerExceptionInterface
-		 * @throws NotFoundExceptionInterface
-		 */
-		get {
-			if (!isset($this->reflector)) {
-				$this->reflector = $this->container->get(ReflectorInterface::class);
-			}
-			return $this->reflector;
-		}
-	}
-
 	public function __construct(private readonly ContainerInterface $container)
 	{
 	}
@@ -61,7 +48,7 @@ final class ProviderDefiner implements DefinerInterface
 			return false;
 		}
 
-		return $this->reflector->reflectClass($provider)->isInstantiable();
+		return ReflectionManager::reflectClass($provider)->isInstantiable();
 	}
 
 	public function create(string $id): DefinitionInterface

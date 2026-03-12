@@ -8,8 +8,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
 use SuperKernel\Annotation\Autowired;
-use SuperKernel\Attribute\Contract\AttributeCollectorInterface;
-use SuperKernel\Contract\ReflectorInterface;
+use SuperKernel\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
@@ -18,25 +17,13 @@ use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\MethodDefinition;
 use SuperKernel\Di\Definition\PropertyDefinition;
 use SuperKernel\Di\Exception\Container\ResolverException;
+use SuperKernel\Reflector\ReflectionManager;
 use Throwable;
 use function method_exists;
 
 #[Resolver]
 final class ObjectResolver implements ResolverInterface
 {
-	private ReflectorInterface $reflector {
-		/**
-		 * @throws ContainerExceptionInterface
-		 * @throws NotFoundExceptionInterface
-		 */
-		get {
-			if (!isset($this->reflector)) {
-				$this->reflector = $this->container->get(ReflectorInterface::class);
-			}
-			return $this->reflector;
-		}
-	}
-
 	private ResolverFactoryInterface $resolverFactory {
 		/**
 		 * @throws ContainerExceptionInterface
@@ -88,7 +75,7 @@ final class ObjectResolver implements ResolverInterface
 			throw ResolverException::unsupportedDefinition($definition);
 		}
 
-		$reflectClass = $this->reflector->reflectClass($definition->getClassName());
+		$reflectClass = ReflectionManager::reflectClass($definition->getClassName());
 		return $reflectClass->newLazyGhost(
 			initializer: fn(object $object) => $this->createInstance($object, $reflectClass),
 		);

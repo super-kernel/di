@@ -8,10 +8,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SplPriorityQueue;
 use SuperKernel\Annotation\Provider;
-use SuperKernel\Attribute\Contract\AttributeCollectorInterface;
-use SuperKernel\Attribute\Metadata\ClassAttribute;
+use SuperKernel\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Attribute\Definer;
-use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use function is_null;
@@ -65,12 +63,7 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 			return $this->definitions[$id];
 		}
 
-		$definers = $this->getDefiners();
-
-		while (!$definers->isEmpty()) {
-			/* @var DefinerInterface $definer */
-			$definer = $definers->extract();
-
+		foreach ($this->getDefiners() as $definer) {
 			if ($definer->support($id)) {
 				return $this->definitions[$id] ??= $definer->create($id);
 			}
@@ -81,6 +74,6 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 
 	public function hasDefinition(string $id): bool
 	{
-		return !is_null($this->getDefinition($id));
+		return $this->getDefinition($id) instanceof DefinitionInterface;
 	}
 }

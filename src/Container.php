@@ -4,15 +4,13 @@ declare(strict_types=1);
 namespace SuperKernel\Di;
 
 use Psr\Container\ContainerInterface;
-use SuperKernel\Attribute\Contract\AttributeCollectorInterface;
-use SuperKernel\Contract\ReflectorInterface;
+use SuperKernel\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Collector\ProviderCollector;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Exception\NotFoundException;
 use SuperKernel\Di\Factory\DefinitionFactory;
 use SuperKernel\Di\Factory\ResolverFactory;
-use SuperKernel\Reflection\Provider\ReflectorProvider;
 use function is_null;
 
 /**
@@ -36,7 +34,6 @@ final class Container implements ContainerInterface
 			self::class                        => $this,
 			ProviderCollector::class           => new ProviderCollector($this->attributeCollector),
 			ContainerInterface::class          => $this,
-			ReflectorInterface::class          => new ReflectorProvider()(),
 			ResolverFactoryInterface::class    => $this->resolverFactory,
 			DefinitionFactoryInterface::class  => $this->definitionFactory,
 			AttributeCollectorInterface::class => $this->attributeCollector,

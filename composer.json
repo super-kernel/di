@@ -25,11 +25,11 @@
     },
     "minimum-stability": "stable",
     "require": {
-        "php": "^8.4",
+        "php": "~8.4.0",
         "super-kernel/annotation": "~1.0",
         "super-kernel/attribute": "~1.0",
         "super-kernel/contract": "~1.0",
-        "super-kernel/reflection": "~1.0"
+        "super-kernel/reflector": "^1.0"
     },
     "require-dev": {
         "super-kernel/event-dispatcher": "~1.0",

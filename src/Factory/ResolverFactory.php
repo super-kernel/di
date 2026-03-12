@@ -7,7 +7,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Annotation\Provider;
-use SuperKernel\Attribute\Contract\AttributeCollectorInterface;
+use SuperKernel\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;

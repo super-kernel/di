@@ -8,32 +8,19 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use ReflectionException;
 use ReflectionParameter;
-use SuperKernel\Contract\ReflectorInterface;
 use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 use SuperKernel\Di\Definition\MethodDefinition;
 use SuperKernel\Di\Exception\Container\ResolverException;
+use SuperKernel\Reflector\ReflectionManager;
 use Throwable;
 use function constant;
 
 #[Resolver]
-final class MethodResolver implements ResolverInterface
+final readonly class MethodResolver implements ResolverInterface
 {
-	private ReflectorInterface $reflector {
-		/**
-		 * @throws ContainerExceptionInterface
-		 * @throws NotFoundExceptionInterface
-		 */
-		get {
-			if (!isset($this->reflector)) {
-				$this->reflector = $this->container->get(ReflectorInterface::class);
-			}
-			return $this->reflector;
-		}
-	}
-
-	public function __construct(private readonly ContainerInterface $container)
+	public function __construct(private ContainerInterface $container)
 	{
 	}
 
@@ -52,7 +39,7 @@ final class MethodResolver implements ResolverInterface
 		$method = $definition->getMethodName();
 
 		try {
-			$reflectionMethod = $this->reflector->reflectMethod($class, $method);
+			$reflectionMethod = ReflectionManager::reflectMethod($class, $method);
 
 			$arguments = [];
 			foreach ($reflectionMethod->getParameters() as $reflectionParameter) {

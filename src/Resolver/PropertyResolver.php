@@ -7,31 +7,18 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Annotation\Autowired;
-use SuperKernel\Attribute\Contract\AttributeCollectorInterface;
-use SuperKernel\Contract\ReflectorInterface;
+use SuperKernel\Contract\AttributeCollectorInterface;
 use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 use SuperKernel\Di\Definition\PropertyDefinition;
 use SuperKernel\Di\Exception\Container\ResolverException;
+use SuperKernel\Reflector\ReflectionManager;
 use function is_null;
 
 #[Resolver]
 final class PropertyResolver implements ResolverInterface
 {
-	private ReflectorInterface $reflector {
-		/**
-		 * @throws ContainerExceptionInterface
-		 * @throws NotFoundExceptionInterface
-		 */
-		get {
-			if (!isset($this->reflector)) {
-				$this->reflector = $this->container->get(ReflectorInterface::class);
-			}
-			return $this->reflector;
-		}
-	}
-
 	private AttributeCollectorInterface $attributeCollector {
 		/**
 		 * @throws ContainerExceptionInterface
@@ -85,7 +72,7 @@ final class PropertyResolver implements ResolverInterface
 	private function getAutowired(string $className, string $propertyName): ?Autowired
 	{
 		foreach ($this->attributeCollector->getPropertyAttributes($className, $propertyName) as $attribute) {
-			if ($attribute->getName() === Autowired::class) {
+			if ($attribute->getAttribute() === Autowired::class) {
 				/** @noinspection PhpIncompatibleReturnTypeInspection */
 				return $attribute->getInstance();
 			}
@@ -105,7 +92,7 @@ final class PropertyResolver implements ResolverInterface
 	 */
 	private function getPropertyValue(string $className, string $propertyName, PropertyDefinition $definition): mixed
 	{
-		$reflectProperty = $this->reflector->reflectProperty($className, $propertyName);
+		$reflectProperty = ReflectionManager::reflectProperty($className, $propertyName);
 
 		$typeName = $reflectProperty->getType()?->getName();
 		if (null !== $typeName && $this->container->has($typeName)) {
