@@ -8,7 +8,6 @@ use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Exception\NotFoundException;
-use SuperKernel\Di\Provider\AttributeMetadataCollectorProvider;
 use SuperKernel\Di\Provider\DefinitionFactoryProvider;
 use SuperKernel\Di\Provider\ResolverFactoryProvider;
 use function is_null;

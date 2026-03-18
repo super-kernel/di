@@ -22,9 +22,7 @@ final class ContainerProvider
 	public function __invoke(): PsrContainerInterface
 	{
 		if (!isset(self::$container)) {
-			self::$container = new Container(
-				new AttributeMetadataCollectorProvider()(),
-			);
+			self::$container = new Container();
 		}
 
 		return self::$container;

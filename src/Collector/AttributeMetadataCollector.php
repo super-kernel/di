@@ -3,9 +3,16 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Collector;
 
+use RuntimeException;
 use SuperKernel\Attribute\AttributeMetadata;
 use SuperKernel\Contract\AttributeMetadataCollectorInterface;
 use SuperKernel\Contract\AttributeMetadataInterface;
+use SuperKernel\Contract\PackageMetadataCollectorInterface;
+use SuperKernel\Contract\PathResolverInterface;
+use SuperKernel\Contract\ProcessHandlerInterface;
+use SuperKernel\Di\Factory\AttributeMetadataFactory;
+use function is_dir;
+use function mkdir;
 
 final readonly class AttributeMetadataCollector implements AttributeMetadataCollectorInterface
 {
@@ -14,18 +21,36 @@ final readonly class AttributeMetadataCollector implements AttributeMetadataColl
 	 */
 	private array $attributes;
 
-	public function __construct(AttributeMetadata ...$attributesMetadata)
+	private PathResolverInterface $pathResolver;
+
+	public function __construct(
+		PathResolverInterface             $pathResolver,
+		ProcessHandlerInterface           $processHandler,
+		PackageMetadataCollectorInterface $packageMetadataCollector,
+	)
 	{
+		$this->pathResolver = $pathResolver->to('vendor')->to('.super-kernel')->to('attribute');
+
+		$dir = $this->pathResolver->get();
+		if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+			throw new RuntimeException("Could not create cache dir: $dir");
+		}
+
+		$attributeMetadataFactory = new AttributeMetadataFactory($pathResolver, $processHandler);
+
 		$attributes = [];
-		foreach ($attributesMetadata as $attributeMetadata) {
-			foreach ($attributeMetadata->getAttributes() as $attribute) {
-				$class = $attribute->getClass();
-				if ($attribute->compatible(AttributeMetadataInterface::TARGET_CLASS)) {
-					$attributes[$class][AttributeMetadataInterface::TARGET_CLASS][] = $attribute;
-				} elseif ($attribute->compatible(AttributeMetadataInterface::TARGET_METHOD)) {
-					$attributes[$class][AttributeMetadataInterface::TARGET_METHOD][$attribute->getMethod()][] = $attribute;
-				} elseif ($attribute->compatible(AttributeMetadataInterface::TARGET_PROPERTY)) {
-					$attributes[$class][AttributeMetadataInterface::TARGET_PROPERTY][$attribute->getProperty()][] = $attribute;
+		foreach ($packageMetadataCollector->getPackages() as $package) {
+			$attributeMetadata = $attributeMetadataFactory->makeAttributeMetadata($package);
+			if (null !== $package) {
+				foreach ($attributeMetadata->getAttributes() as $attribute) {
+					$class = $attribute->getClass();
+					if ($attribute->compatible(AttributeMetadataInterface::TARGET_CLASS)) {
+						$attributes[$class][AttributeMetadataInterface::TARGET_CLASS][] = $attribute;
+					} elseif ($attribute->compatible(AttributeMetadataInterface::TARGET_METHOD)) {
+						$attributes[$class][AttributeMetadataInterface::TARGET_METHOD][$attribute->getMethod()][] = $attribute;
+					} elseif ($attribute->compatible(AttributeMetadataInterface::TARGET_PROPERTY)) {
+						$attributes[$class][AttributeMetadataInterface::TARGET_PROPERTY][$attribute->getProperty()][] = $attribute;
+					}
 				}
 			}
 		}
