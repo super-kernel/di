@@ -12,7 +12,7 @@ use SuperKernel\Di\Collector\ReflectionCollector;
 	Provider(ReflectionCollectorInterface::class),
 	Factory,
 ]
-final class ReflectorProvider
+final class ReflectionCollectorProvider
 {
 	private static ReflectionCollectorInterface $reflector;
 

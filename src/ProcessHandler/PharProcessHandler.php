@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace SuperKernel\Di\ProcessHandler;
 
 use Phar;
-use SuperKernel\ComposerResolver\Contract\ScannerInterface;
+use SuperKernel\Contract\ProcessHandlerInterface;
 use function extension_loaded;
 use function strlen;
 
-final readonly class PharProcessHandler implements ScannerInterface
+final readonly class PharProcessHandler implements ProcessHandlerInterface
 {
 	public function supports(): bool
 	{

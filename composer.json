@@ -27,7 +27,7 @@
     "require": {
         "php": "~8.4.0",
         "super-kernel/annotation": "~1.0.0",
-        "super-kernel/attribute": "~1.0.0",
+        "super-kernel/composer-resolver": "~1.0.0",
         "super-kernel/contract": "~1.0.0"
     },
     "require-dev": {

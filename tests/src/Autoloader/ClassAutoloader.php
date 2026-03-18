@@ -80,7 +80,7 @@ final class ClassAutoloader implements ClassAutoloaderInterface
 			'SuperKernel\\Di\\Provider\\AttributeMetadataCollectorProvider'      => $vendorDir . '/super-kernel/di/src/Provider/AttributeMetadataCollectorProvider.php',
 			'SuperKernel\\Di\\Provider\\ContainerProvider'                       => $vendorDir . '/super-kernel/di/src/Provider/ContainerProvider.php',
 			'SuperKernel\\Di\\Provider\\PathResolverProvider'                    => $vendorDir . '/super-kernel/di/src/Provider/PathResolverProvider.php',
-			'SuperKernel\\Di\\Provider\\ReflectorProvider'                       => $vendorDir . '/super-kernel/di/src/Provider/ReflectorProvider.php',
+			'SuperKernel\\Di\\Provider\\ReflectionCollectorProvider' => $vendorDir . '/super-kernel/di/src/Provider/ReflectionCollectorProvider.php',
 			'SuperKernel\\Di\\Resolver\\FactoryResolver'                         => $vendorDir . '/super-kernel/di/src/Resolver/FactoryResolver.php',
 			'SuperKernel\\Di\\Resolver\\MethodResolver'                          => $vendorDir . '/super-kernel/di/src/Resolver/MethodResolver.php',
 			'SuperKernel\\Di\\Resolver\\ObjectResolver'                          => $vendorDir . '/super-kernel/di/src/Resolver/ObjectResolver.php',

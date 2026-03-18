@@ -5,7 +5,7 @@ namespace SuperKernel\Di\ProcessHandler;
 
 use Phar;
 use RuntimeException;
-use SuperKernel\ComposerResolver\Contract\ScannerInterface;
+use SuperKernel\Contract\ProcessHandlerInterface;
 use Throwable;
 use function extension_loaded;
 use function pcntl_fork;
@@ -14,7 +14,7 @@ use function pcntl_wexitstatus;
 use function strlen;
 use const PHP_SAPI;
 
-final readonly class PcntlProcessHandler implements ScannerInterface
+final readonly class PcntlProcessHandler implements ProcessHandlerInterface
 {
 	public function supports(): bool
 	{

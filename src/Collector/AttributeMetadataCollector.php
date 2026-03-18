@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Collector;
 
 use RuntimeException;
-use SuperKernel\Attribute\AttributeMetadata;
 use SuperKernel\Contract\AttributeMetadataCollectorInterface;
 use SuperKernel\Contract\AttributeMetadataInterface;
 use SuperKernel\Contract\PackageMetadataCollectorInterface;
@@ -36,21 +35,23 @@ final readonly class AttributeMetadataCollector implements AttributeMetadataColl
 			throw new RuntimeException("Could not create cache dir: $dir");
 		}
 
-		$attributeMetadataFactory = new AttributeMetadataFactory($pathResolver, $processHandler);
+		$attributeMetadataFactory = new AttributeMetadataFactory($this->pathResolver, $processHandler);
 
 		$attributes = [];
 		foreach ($packageMetadataCollector->getPackages() as $package) {
 			$attributeMetadata = $attributeMetadataFactory->makeAttributeMetadata($package);
-			if (null !== $package) {
-				foreach ($attributeMetadata->getAttributes() as $attribute) {
-					$class = $attribute->getClass();
-					if ($attribute->compatible(AttributeMetadataInterface::TARGET_CLASS)) {
-						$attributes[$class][AttributeMetadataInterface::TARGET_CLASS][] = $attribute;
-					} elseif ($attribute->compatible(AttributeMetadataInterface::TARGET_METHOD)) {
-						$attributes[$class][AttributeMetadataInterface::TARGET_METHOD][$attribute->getMethod()][] = $attribute;
-					} elseif ($attribute->compatible(AttributeMetadataInterface::TARGET_PROPERTY)) {
-						$attributes[$class][AttributeMetadataInterface::TARGET_PROPERTY][$attribute->getProperty()][] = $attribute;
-					}
+			if (null === $attributeMetadata) {
+				continue;
+			}
+
+			foreach ($attributeMetadata->getAttributes() as $attribute) {
+				$class = $attribute->getClass();
+				if ($attribute->compatible(AttributeMetadataInterface::TARGET_CLASS)) {
+					$attributes[$class][AttributeMetadataInterface::TARGET_CLASS][] = $attribute;
+				} elseif ($attribute->compatible(AttributeMetadataInterface::TARGET_METHOD)) {
+					$attributes[$class][AttributeMetadataInterface::TARGET_METHOD][$attribute->getMethod()][] = $attribute;
+				} elseif ($attribute->compatible(AttributeMetadataInterface::TARGET_PROPERTY)) {
+					$attributes[$class][AttributeMetadataInterface::TARGET_PROPERTY][$attribute->getProperty()][] = $attribute;
 				}
 			}
 		}
@@ -101,7 +102,6 @@ final readonly class AttributeMetadataCollector implements AttributeMetadataColl
 			if (!isset($targets[AttributeMetadataInterface::TARGET_METHOD])) {
 				continue;
 			}
-
 			foreach ($targets[AttributeMetadataInterface::TARGET_METHOD] ?? [] as $methods) {
 				foreach ($methods as $method) {
 					if ($method->getAttribute() === $attribute) {

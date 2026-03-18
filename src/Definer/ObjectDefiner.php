@@ -9,7 +9,6 @@ use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Contract\ReflectionCollectorInterface;
 use SuperKernel\Di\Attribute\Definer;
 use SuperKernel\Di\Collector\ProviderCollector;
-use SuperKernel\Di\Collector\ReflectionCollector;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Definition\ObjectDefinition;
@@ -39,7 +38,7 @@ final class ObjectDefiner implements DefinerInterface
 		 */
 		get {
 			if (!isset($this->reflectionCollector)) {
-				$this->reflectionCollector = $this->container->get(ReflectionCollector::class);
+				$this->reflectionCollector = $this->container->get(ReflectionCollectorInterface::class);
 			}
 			return $this->reflectionCollector;
 		}

@@ -5,6 +5,9 @@ namespace SuperKernel\Di;
 
 use SuperKernel\Contract\AttributeMetadataCollectorInterface;
 use SuperKernel\Contract\ContainerInterface;
+use SuperKernel\Contract\ReflectionCollectorInterface;
+use SuperKernel\Di\Collector\ProviderCollector;
+use SuperKernel\Di\Collector\ReflectionCollector;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Exception\NotFoundException;
@@ -24,12 +27,16 @@ final class Container implements ContainerInterface
 
 	private array $resolverEntries;
 
-	final public function __construct()
+	final public function __construct(AttributeMetadataCollectorInterface $attributeMetadataCollector)
 	{
 		$this->resolverFactory = new ResolverFactoryProvider()($this);
 		$this->definitionFactory = new DefinitionFactoryProvider()($this);
 		$this->resolverEntries = [
-			AttributeMetadataCollectorInterface::class => new AttributeMetadataCollectorProvider()(),
+			ProviderCollector::class                   => new ProviderCollector($attributeMetadataCollector),
+			ResolverFactoryInterface::class            => $this->resolverFactory,
+			DefinitionFactoryInterface::class          => $this->definitionFactory,
+			ReflectionCollectorInterface::class        => new ReflectionCollector(),
+			AttributeMetadataCollectorInterface::class => $attributeMetadataCollector,
 		];
 	}
 

@@ -5,16 +5,17 @@ namespace SuperKernel\Di\Factory;
 
 use Phar;
 use Reflector;
-use RuntimeException;
-use SuperKernel\Attribute\Attribute;
-use SuperKernel\Attribute\AttributeMetadata;
-use SuperKernel\Attribute\Builder\AttributeMetadataBuilder;
 use SuperKernel\ComposerResolver\Provider\PackageCollectorProvider;
+use SuperKernel\Contract\AttributeMetadataInterface;
 use SuperKernel\Contract\PackageMetadataInterface;
 use SuperKernel\Contract\PathResolverInterface;
 use SuperKernel\Contract\ProcessHandlerInterface;
-use SuperKernel\Reflector\ReflectionManager;
+use SuperKernel\Di\Collector\AttributeMetadata;
+use SuperKernel\Di\Collector\PackageAttributeMetadata;
+use SuperKernel\Di\Provider\ReflectionCollectorProvider;
 use Throwable;
+use function array_filter;
+use function array_merge;
 
 final readonly class AttributeMetadataFactory
 {
@@ -25,10 +26,12 @@ final readonly class AttributeMetadataFactory
 	{
 	}
 
-	public function makeAttributeMetadata(PackageMetadataInterface $package): ?AttributeMetadata
+	public function makeAttributeMetadata(PackageMetadataInterface $package): ?PackageAttributeMetadata
 	{
 		$fileName = str_replace(['/', '\\'], '_', $package->getName());
 		$filePath = $this->pathResolver->to($fileName)->get();
+
+//		return $this->scan($package, $filePath);
 
 		$isPhar = strlen(Phar::running(false)) > 0;
 		if ($isPhar) {
@@ -47,17 +50,17 @@ final readonly class AttributeMetadataFactory
 		return $cachePackage;
 	}
 
-	private function loadCache(string $filePath): ?AttributeMetadata
+	private function loadCache(string $filePath): ?PackageAttributeMetadata
 	{
 		if (!is_file($filePath)) return null;
 		$content = file_get_contents($filePath);
 		if (!$content) return null;
 
-		$data = unserialize($content, ['allowed_classes' => [AttributeMetadata::class, Attribute::class]]);
-		return $data instanceof AttributeMetadata ? $data : null;
+		$data = unserialize($content, ['allowed_classes' => [PackageAttributeMetadata::class, AttributeMetadata::class]]);
+		return $data instanceof PackageAttributeMetadata ? $data : null;
 	}
 
-	private function scan(PackageMetadataInterface $package, string $filePath): ?AttributeMetadata
+	private function scan(PackageMetadataInterface $package, string $filePath): ?PackageAttributeMetadata
 	{
 		try {
 			$this->processHandler->execute(function () use ($package, $filePath) {
@@ -65,23 +68,24 @@ final readonly class AttributeMetadataFactory
 				file_put_contents($filePath, serialize($metadata), LOCK_EX);
 			});
 		}
-		catch (Throwable) {
+		catch (Throwable $throwable) {
+			var_dump($throwable->getMessage());
 			return null;
 		}
 
 		return $this->loadCache($filePath);
 	}
 
-	public function make(PackageMetadataInterface $packageMetadata): AttributeMetadata
+	public function make(PackageMetadataInterface $packageMetadata): PackageAttributeMetadata
 	{
 		$attributes = [];
 		foreach ($packageMetadata->getClassmap() as $class => $path) {
 			try {
-				$reflectClass = ReflectionManager::reflectClass($class);
+				$reflectClass = new ReflectionCollectorProvider()()->reflectClass($class);
 
-				$attributes[] = $this->addAttribute($reflectClass);
-				$attributes[] = $this->addAttribute($reflectClass->getMethods());
-				$attributes[] = $this->addAttribute($reflectClass->getProperties());
+				$attributes = array_merge($attributes, $this->addAttribute($reflectClass));
+				$attributes = array_merge($attributes, $this->addAttribute($reflectClass->getMethods()));
+				$attributes = array_merge($attributes, $this->addAttribute($reflectClass->getProperties()));
 			}
 			catch (Throwable $throwable) {
 				if (!is_null($packageMetadata->getReference())) {
@@ -90,7 +94,7 @@ final readonly class AttributeMetadataFactory
 
 				printf("\033[33m[WARNING]\033[0m %s in %s" . PHP_EOL,
 				       $throwable->getMessage(),
-				       PackageCollectorProvider::make()
+				       PackageCollectorProvider::make($this->pathResolver)
 					       ->getPackage($packageMetadata->getName())
 					       ->getPathResolver()
 					       ->to($path)
@@ -99,10 +103,10 @@ final readonly class AttributeMetadataFactory
 			}
 		}
 
-		return new AttributeMetadata(
+		return new PackageAttributeMetadata(
 			   $packageMetadata->getName(),
 			   $packageMetadata->getReference(),
-			...$attributes,
+			...array_filter($attributes, fn($attribute) => $attribute instanceof AttributeMetadataInterface),
 		);
 	}
 
@@ -116,7 +120,7 @@ final readonly class AttributeMetadataFactory
 				continue;
 			}
 			foreach ($reflector->getAttributes() as $attribute) {
-				$attributes[] = new Attribute($reflector, $attribute);
+				$attributes[] = new AttributeMetadata($reflector, $attribute);
 			}
 		}
 
