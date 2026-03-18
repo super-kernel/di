@@ -6,12 +6,14 @@ namespace SuperKernel\Di\Definer;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use SuperKernel\Contract\ReflectionCollectorInterface;
 use SuperKernel\Di\Attribute\Definer;
 use SuperKernel\Di\Collector\ProviderCollector;
+use SuperKernel\Di\Collector\ReflectionCollector;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Definition\ObjectDefinition;
-use SuperKernel\Reflector\ReflectionManager;
+use Throwable;
 use function class_exists;
 
 #[Definer]
@@ -30,6 +32,19 @@ final class ObjectDefiner implements DefinerInterface
 		}
 	}
 
+	private ReflectionCollectorInterface $reflectionCollector {
+		/**
+		 * @throws ContainerExceptionInterface
+		 * @throws NotFoundExceptionInterface
+		 */
+		get {
+			if (!isset($this->reflectionCollector)) {
+				$this->reflectionCollector = $this->container->get(ReflectionCollector::class);
+			}
+			return $this->reflectionCollector;
+		}
+	}
+
 	public function __construct(private readonly ContainerInterface $container)
 	{
 	}
@@ -40,7 +55,12 @@ final class ObjectDefiner implements DefinerInterface
 			return false;
 		}
 
-		return ReflectionManager::reflectClass($id)->isInstantiable();
+		try {
+			return $this->reflectionCollector->reflectClass($id)->isInstantiable();
+		}
+		catch (Throwable) {
+			return false;
+		}
 	}
 
 	public function create(string $id): DefinitionInterface

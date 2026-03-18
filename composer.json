@@ -26,14 +26,12 @@
     "minimum-stability": "stable",
     "require": {
         "php": "~8.4.0",
-        "super-kernel/annotation": "~1.0",
-        "super-kernel/attribute": "~1.0",
-        "super-kernel/contract": "~1.0",
-        "super-kernel/reflector": "^1.0"
+        "super-kernel/annotation": "~1.0.0",
+        "super-kernel/attribute": "~1.0.0",
+        "super-kernel/contract": "~1.0.0"
     },
     "require-dev": {
-        "super-kernel/event-dispatcher": "~1.0",
-        "super-kernel/framework": "~1.0",
-        "symfony/console": "~7.4"
+        "super-kernel/event-dispatcher": "~1.0.0",
+        "super-kernel/framework": "~1.0.0"
     }
 }

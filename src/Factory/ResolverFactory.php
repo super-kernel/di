@@ -7,7 +7,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Annotation\Provider;
-use SuperKernel\Contract\AttributeCollectorInterface;
+use SuperKernel\Contract\AttributeMetadataCollectorInterface;
 use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
@@ -21,27 +21,26 @@ final class ResolverFactory implements ResolverFactoryInterface
 		get {
 			if (!isset($this->resolvers)) {
 				$resolvers = [];
-				foreach ($this->attributeCollector->getClassesByAttribute(Resolver::class) as $attribute) {
+				foreach ($this->attributeMetadataCollector->getClassesByAttribute(Resolver::class) as $attribute) {
 					$resolver = $attribute->getClass();
 					$resolvers[] = new $resolver($this->container);
 				}
-
 				$this->resolvers = $resolvers;
 			}
 			return $this->resolvers;
 		}
 	}
 
-	private AttributeCollectorInterface $attributeCollector {
+	private AttributeMetadataCollectorInterface $attributeMetadataCollector {
 		/**
 		 * @throws ContainerExceptionInterface
 		 * @throws NotFoundExceptionInterface
 		 */
 		get {
-			if (!isset($this->attributeCollector)) {
-				$this->attributeCollector = $this->container->get(AttributeCollectorInterface::class);
+			if (!isset($this->attributeMetadataCollector)) {
+				$this->attributeMetadataCollector = $this->container->get(AttributeMetadataCollectorInterface::class);
 			}
-			return $this->attributeCollector;
+			return $this->attributeMetadataCollector;
 		}
 	}
 

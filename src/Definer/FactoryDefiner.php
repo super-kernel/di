@@ -7,7 +7,6 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SuperKernel\Di\Attribute\Definer;
-use SuperKernel\Di\Collector\ProviderCollector;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
@@ -19,16 +18,16 @@ use function method_exists;
 #[Definer(200)]
 final class FactoryDefiner implements DefinerInterface
 {
-	private ProviderCollector $providerCollector {
+	private DefinitionFactoryInterface $definitionFactory {
 		/**
 		 * @throws ContainerExceptionInterface
 		 * @throws NotFoundExceptionInterface
 		 */
 		get {
-			if (!isset($this->providerCollector)) {
-				$this->providerCollector = $this->container->get(ProviderCollector::class);
+			if (!isset($this->definitionFactory)) {
+				$this->definitionFactory = $this->container->get(DefinitionFactoryInterface::class);
 			}
-			return $this->providerCollector;
+			return $this->definitionFactory;
 		}
 	}
 
@@ -48,20 +47,11 @@ final class FactoryDefiner implements DefinerInterface
 		return true;
 	}
 
-	/**
-	 * @param string $id
-	 *
-	 * @return DefinitionInterface
-	 * @throws ContainerExceptionInterface
-	 * @throws NotFoundExceptionInterface
-	 */
 	public function create(string $id): DefinitionInterface
 	{
-		$definers = $this->container->get(DefinitionFactoryInterface::class);
-
 		/* @var DefinerInterface $definer */
-		foreach ($definers->getDefiners() as $definer) {
-			if ($definer instanceof self) {
+		foreach ($this->definitionFactory->getDefiners() as $definer) {
+			if ($definer instanceof $this) {
 				continue;
 			}
 			if ($definer->support($id)) {

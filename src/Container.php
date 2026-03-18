@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di;
 
-use Psr\Container\ContainerInterface;
-use SuperKernel\Contract\AttributeCollectorInterface;
-use SuperKernel\Di\Collector\ProviderCollector;
+use SuperKernel\Contract\AttributeMetadataCollectorInterface;
+use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Exception\NotFoundException;
-use SuperKernel\Di\Factory\DefinitionFactory;
-use SuperKernel\Di\Factory\ResolverFactory;
+use SuperKernel\Di\Provider\AttributeMetadataCollectorProvider;
+use SuperKernel\Di\Provider\DefinitionFactoryProvider;
+use SuperKernel\Di\Provider\ResolverFactoryProvider;
 use function is_null;
 
 /**
@@ -25,18 +25,12 @@ final class Container implements ContainerInterface
 
 	private array $resolverEntries;
 
-	final public function __construct(private readonly AttributeCollectorInterface $attributeCollector)
+	final public function __construct()
 	{
-		$this->resolverFactory = new ResolverFactory($this);
-		$this->definitionFactory = new DefinitionFactory($this);
-
+		$this->resolverFactory = new ResolverFactoryProvider()($this);
+		$this->definitionFactory = new DefinitionFactoryProvider()($this);
 		$this->resolverEntries = [
-			self::class                        => $this,
-			ProviderCollector::class           => new ProviderCollector($this->attributeCollector),
-			ContainerInterface::class          => $this,
-			ResolverFactoryInterface::class    => $this->resolverFactory,
-			DefinitionFactoryInterface::class  => $this->definitionFactory,
-			AttributeCollectorInterface::class => $this->attributeCollector,
+			AttributeMetadataCollectorInterface::class => new AttributeMetadataCollectorProvider()(),
 		];
 	}
 

@@ -4,14 +4,14 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Collector;
 
 use SuperKernel\Annotation\Provider;
-use SuperKernel\Contract\AttributeCollectorInterface;
+use SuperKernel\Contract\AttributeMetadataCollectorInterface;
 use function array_map;
 
 final readonly class ProviderCollector
 {
 	private array $containers;
 
-	public function __construct(AttributeCollectorInterface $attributeCollector)
+	public function __construct(AttributeMetadataCollectorInterface $attributeCollector)
 	{
 		$containers = [];
 		foreach ($attributeCollector->getClassesByAttribute(Provider::class) as $attribute) {

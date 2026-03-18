@@ -3,25 +3,27 @@ declare(strict_types=1);
 
 namespace SuperKernel\Di\Provider;
 
-use Psr\Container\ContainerInterface;
+use Psr\Container\ContainerInterface as PsrContainerInterface;
 use SuperKernel\Annotation\Factory;
 use SuperKernel\Annotation\Provider;
-use SuperKernel\Attribute\Provider\AttributeCollectorProvider;
+use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Di\Container;
 
 #[
+	Provider(PsrContainerInterface::class),
 	Provider(ContainerInterface::class),
+	Provider(Container::class),
 	Factory,
 ]
 final class ContainerProvider
 {
-	private static ContainerInterface $container;
+	private static PsrContainerInterface $container;
 
-	public function __invoke(): ContainerInterface
+	public function __invoke(): PsrContainerInterface
 	{
 		if (!isset(self::$container)) {
 			self::$container = new Container(
-				new AttributeCollectorProvider()(),
+				new AttributeMetadataCollectorProvider()(),
 			);
 		}
 

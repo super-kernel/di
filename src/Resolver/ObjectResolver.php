@@ -7,8 +7,10 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
+use ReflectionException;
 use SuperKernel\Annotation\Autowired;
-use SuperKernel\Contract\AttributeCollectorInterface;
+use SuperKernel\Contract\AttributeMetadataCollectorInterface;
+use SuperKernel\Contract\ReflectionCollectorInterface;
 use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
@@ -17,7 +19,6 @@ use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\MethodDefinition;
 use SuperKernel\Di\Definition\PropertyDefinition;
 use SuperKernel\Di\Exception\Container\ResolverException;
-use SuperKernel\Reflector\ReflectionManager;
 use Throwable;
 use function method_exists;
 
@@ -37,16 +38,29 @@ final class ObjectResolver implements ResolverInterface
 		}
 	}
 
-	private AttributeCollectorInterface $attributeCollector {
+	private ReflectionCollectorInterface $reflectionCollector {
 		/**
 		 * @throws ContainerExceptionInterface
 		 * @throws NotFoundExceptionInterface
 		 */
 		get {
-			if (!isset($this->attributeCollector)) {
-				$this->attributeCollector = $this->container->get(AttributeCollectorInterface::class);
+			if (!isset($this->reflectionCollector)) {
+				$this->reflectionCollector = $this->container->get(ReflectionCollectorInterface::class);
 			}
-			return $this->attributeCollector;
+			return $this->reflectionCollector;
+		}
+	}
+
+	private AttributeMetadataCollectorInterface $attributeMetadataCollector {
+		/**
+		 * @throws ContainerExceptionInterface
+		 * @throws NotFoundExceptionInterface
+		 */
+		get {
+			if (!isset($this->attributeMetadataCollector)) {
+				$this->attributeMetadataCollector = $this->container->get(AttributeMetadataCollectorInterface::class);
+			}
+			return $this->attributeMetadataCollector;
 		}
 	}
 
@@ -68,6 +82,7 @@ final class ObjectResolver implements ResolverInterface
 	 * @param DefinitionInterface $definition
 	 *
 	 * @return object
+	 * @throws ReflectionException
 	 */
 	public function resolve(DefinitionInterface $definition): object
 	{
@@ -75,7 +90,7 @@ final class ObjectResolver implements ResolverInterface
 			throw ResolverException::unsupportedDefinition($definition);
 		}
 
-		$reflectClass = ReflectionManager::reflectClass($definition->getClassName());
+		$reflectClass = $this->reflectionCollector->reflectClass($definition->getClassName());
 		return $reflectClass->newLazyGhost(
 			initializer: fn(object $object) => $this->createInstance($object, $reflectClass),
 		);
@@ -93,7 +108,7 @@ final class ObjectResolver implements ResolverInterface
 		$properties = [];
 
 		try {
-			foreach ($this->attributeCollector->getPropertiesByAttribute(Autowired::class) as $attribute) {
+			foreach ($this->attributeMetadataCollector->getPropertiesByAttribute(Autowired::class) as $attribute) {
 				if ($attribute->getClass() === $className) {
 					$propertyName = $attribute->getProperty();
 					$propertyDefinition = new PropertyDefinition($propertyName, $className);

@@ -8,11 +8,10 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use SplPriorityQueue;
 use SuperKernel\Annotation\Provider;
-use SuperKernel\Contract\AttributeCollectorInterface;
+use SuperKernel\Contract\AttributeMetadataCollectorInterface;
 use SuperKernel\Di\Attribute\Definer;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
-use function is_null;
 
 #[Provider(DefinitionFactoryInterface::class)]
 final class DefinitionFactory implements DefinitionFactoryInterface
@@ -22,29 +21,27 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 	private SplPriorityQueue $definers {
 		get {
 			if (!isset($this->definers)) {
-				$splPriorityQueue = new SplPriorityQueue;
-				foreach ($this->attributeCollector->getClassesByAttribute(Definer::class) as $attribute) {
+				$splPriorityQueue = new SplPriorityQueue();
+				foreach ($this->attributeMetadataCollector->getClassesByAttribute(Definer::class) as $attribute) {
 					$definer = $attribute->getClass();
 					$splPriorityQueue->insert(new $definer($this->container), $attribute->getInstance()->priority);
 				}
-
 				$this->definers = $splPriorityQueue;
 			}
-
 			return $this->definers;
 		}
 	}
 
-	private AttributeCollectorInterface $attributeCollector {
+	private AttributeMetadataCollectorInterface $attributeMetadataCollector {
 		/**
 		 * @throws ContainerExceptionInterface
 		 * @throws NotFoundExceptionInterface
 		 */
 		get {
-			if (!isset($this->attributeCollector)) {
-				$this->attributeCollector = $this->container->get(AttributeCollectorInterface::class);
+			if (!isset($this->attributeMetadataCollector)) {
+				$this->attributeMetadataCollector = $this->container->get(AttributeMetadataCollectorInterface::class);
 			}
-			return $this->attributeCollector;
+			return $this->attributeMetadataCollector;
 		}
 	}
 

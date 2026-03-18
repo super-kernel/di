@@ -6,29 +6,43 @@ namespace SuperKernel\Di\Resolver;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use ReflectionException;
 use SuperKernel\Annotation\Autowired;
-use SuperKernel\Contract\AttributeCollectorInterface;
+use SuperKernel\Contract\AttributeMetadataCollectorInterface;
+use SuperKernel\Contract\ReflectionCollectorInterface;
 use SuperKernel\Di\Attribute\Resolver;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 use SuperKernel\Di\Definition\PropertyDefinition;
 use SuperKernel\Di\Exception\Container\ResolverException;
-use SuperKernel\Reflector\ReflectionManager;
 use function is_null;
 
 #[Resolver]
 final class PropertyResolver implements ResolverInterface
 {
-	private AttributeCollectorInterface $attributeCollector {
+	private ReflectionCollectorInterface $reflectionCollector {
 		/**
 		 * @throws ContainerExceptionInterface
 		 * @throws NotFoundExceptionInterface
 		 */
 		get {
-			if (!isset($this->attributeCollector)) {
-				$this->attributeCollector = $this->container->get(AttributeCollectorInterface::class);
+			if (!isset($this->reflectionCollector)) {
+				$this->reflectionCollector = $this->container->get(ReflectionCollectorInterface::class);
 			}
-			return $this->attributeCollector;
+			return $this->reflectionCollector;
+		}
+	}
+
+	private AttributeMetadataCollectorInterface $attributeMetadataCollector {
+		/**
+		 * @throws ContainerExceptionInterface
+		 * @throws NotFoundExceptionInterface
+		 */
+		get {
+			if (!isset($this->attributeMetadataCollector)) {
+				$this->attributeMetadataCollector = $this->container->get(AttributeMetadataCollectorInterface::class);
+			}
+			return $this->attributeMetadataCollector;
 		}
 	}
 
@@ -47,6 +61,7 @@ final class PropertyResolver implements ResolverInterface
 	 * @return mixed
 	 * @throws ContainerExceptionInterface
 	 * @throws NotFoundExceptionInterface
+	 * @throws ReflectionException
 	 */
 	public function resolve(DefinitionInterface $definition): mixed
 	{
@@ -71,10 +86,12 @@ final class PropertyResolver implements ResolverInterface
 
 	private function getAutowired(string $className, string $propertyName): ?Autowired
 	{
-		foreach ($this->attributeCollector->getPropertyAttributes($className, $propertyName) as $attribute) {
+		foreach ($this->attributeMetadataCollector->getPropertyAttributes($className, $propertyName) as $attribute) {
 			if ($attribute->getAttribute() === Autowired::class) {
-				/** @noinspection PhpIncompatibleReturnTypeInspection */
-				return $attribute->getInstance();
+				$instance = $attribute->getInstance();
+				if ($instance instanceof Autowired) {
+					return $instance;
+				}
 			}
 		}
 
@@ -89,10 +106,11 @@ final class PropertyResolver implements ResolverInterface
 	 * @return mixed
 	 * @throws ContainerExceptionInterface
 	 * @throws NotFoundExceptionInterface
+	 * @throws ReflectionException
 	 */
 	private function getPropertyValue(string $className, string $propertyName, PropertyDefinition $definition): mixed
 	{
-		$reflectProperty = ReflectionManager::reflectProperty($className, $propertyName);
+		$reflectProperty = $this->reflectionCollector->reflectProperty($className, $propertyName);
 
 		$typeName = $reflectProperty->getType()?->getName();
 		if (null !== $typeName && $this->container->has($typeName)) {
