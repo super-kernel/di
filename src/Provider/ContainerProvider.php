@@ -6,9 +6,8 @@ namespace SuperKernel\Di\Provider;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 use SuperKernel\Annotation\Factory;
 use SuperKernel\Annotation\Provider;
-use SuperKernel\ComposerResolver\Provider\PackageMetadataCollectorProvider;
+use SuperKernel\Contract\AttributeMetadataCollectorInterface;
 use SuperKernel\Contract\ContainerInterface;
-use SuperKernel\Di\Collector\AttributeMetadataCollector;
 use SuperKernel\Di\Container;
 
 #[
@@ -19,18 +18,10 @@ use SuperKernel\Di\Container;
 ]
 final class ContainerProvider
 {
-	private static PsrContainerInterface $container;
-
-	public function __invoke(): PsrContainerInterface
+	public function __invoke(?AttributeMetadataCollectorInterface $attributeMetadataCollector = null): PsrContainerInterface
 	{
-		if (!isset(self::$container)) {
-			$pathResolver = new PathResolverProvider()();
-			$processHandler = new PharProcessHandlerProvider()();
-			$packageMetadataCollector = new PackageMetadataCollectorProvider()($pathResolver, $processHandler);
-			$attributeMetadataCollector = new AttributeMetadataCollector($pathResolver, $processHandler, $packageMetadataCollector);
-			self::$container = new Container($attributeMetadataCollector);
-		}
+		$attributeMetadataCollector ??= new AttributeMetadataCollectorProvider()();
 
-		return self::$container;
+		return new Container($attributeMetadataCollector);
 	}
 }

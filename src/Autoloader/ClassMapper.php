@@ -1,0 +1,133 @@
+<?php
+declare(strict_types=1);
+
+namespace SuperKernel\Di\Autoloader;
+
+use function dirname;
+
+final readonly class ClassMapper
+{
+	private array $classMap;
+
+	private function __construct()
+	{
+		$vendorDir = dirname(__DIR__, 2) . '/vendor';
+		$baseDir = dirname($vendorDir);
+
+		$this->classMap = [
+			'Psr\\Container\\ContainerExceptionInterface'                               => $vendorDir . '/psr/container/src/ContainerExceptionInterface.php',
+			'Psr\\Container\\ContainerInterface'                                        => $vendorDir . '/psr/container/src/ContainerInterface.php',
+			'Psr\\Container\\NotFoundExceptionInterface'                                => $vendorDir . '/psr/container/src/NotFoundExceptionInterface.php',
+			'Psr\\EventDispatcher\\EventDispatcherInterface'                            => $vendorDir . '/psr/event-dispatcher/src/EventDispatcherInterface.php',
+			'Psr\\EventDispatcher\\ListenerProviderInterface'                           => $vendorDir . '/psr/event-dispatcher/src/ListenerProviderInterface.php',
+			'Psr\\EventDispatcher\\StoppableEventInterface'                             => $vendorDir . '/psr/event-dispatcher/src/StoppableEventInterface.php',
+			'Psr\\Http\\Message\\MessageInterface'                                      => $vendorDir . '/psr/http-message/src/MessageInterface.php',
+			'Psr\\Http\\Message\\RequestInterface'                                      => $vendorDir . '/psr/http-message/src/RequestInterface.php',
+			'Psr\\Http\\Message\\ResponseInterface'                                     => $vendorDir . '/psr/http-message/src/ResponseInterface.php',
+			'Psr\\Http\\Message\\ServerRequestInterface'                                => $vendorDir . '/psr/http-message/src/ServerRequestInterface.php',
+			'Psr\\Http\\Message\\StreamInterface'                                       => $vendorDir . '/psr/http-message/src/StreamInterface.php',
+			'Psr\\Http\\Message\\UploadedFileInterface'                                 => $vendorDir . '/psr/http-message/src/UploadedFileInterface.php',
+			'Psr\\Http\\Message\\UriInterface'                                          => $vendorDir . '/psr/http-message/src/UriInterface.php',
+			'Psr\\Log\\AbstractLogger'                                                  => $vendorDir . '/psr/log/src/AbstractLogger.php',
+			'Psr\\Log\\InvalidArgumentException'                                        => $vendorDir . '/psr/log/src/InvalidArgumentException.php',
+			'Psr\\Log\\LogLevel'                                                        => $vendorDir . '/psr/log/src/LogLevel.php',
+			'Psr\\Log\\LoggerAwareInterface'                                            => $vendorDir . '/psr/log/src/LoggerAwareInterface.php',
+			'Psr\\Log\\LoggerAwareTrait'                                                => $vendorDir . '/psr/log/src/LoggerAwareTrait.php',
+			'Psr\\Log\\LoggerInterface'                                                 => $vendorDir . '/psr/log/src/LoggerInterface.php',
+			'Psr\\Log\\LoggerTrait'                                                     => $vendorDir . '/psr/log/src/LoggerTrait.php',
+			'Psr\\Log\\NullLogger'                                                      => $vendorDir . '/psr/log/src/NullLogger.php',
+			'SuperKernelTest\\Di\\Application'                                          => $baseDir . '/tests/src/Application.php',
+			'SuperKernelTest\\Di\\Autoloader\\ClassAutoloader'                          => $baseDir . '/tests/src/Autoloader/ClassAutoloader.php',
+			'SuperKernelTest\\Di\\Provider\\ApplicationProvider'                        => $baseDir . '/tests/src/Provider/ApplicationProvider.php',
+			'SuperKernelTest\\Di\\Provider\\ClassAutoloaderProvider'                    => $baseDir . '/tests/src/Provider/ClassAutoloaderProvider.php',
+			'SuperKernel\\Annotation\\Autowired'                                        => $vendorDir . '/super-kernel/annotation/src/Autowired.php',
+			'SuperKernel\\Annotation\\Factory'                                          => $vendorDir . '/super-kernel/annotation/src/Factory.php',
+			'SuperKernel\\Annotation\\Listener'                                         => $vendorDir . '/super-kernel/annotation/src/Listener.php',
+			'SuperKernel\\Annotation\\Provider'                                         => $vendorDir . '/super-kernel/annotation/src/Provider.php',
+			'SuperKernel\\ComposerResolver\\Ast\\TokenClassParser'                      => $vendorDir . '/super-kernel/composer-resolver/src/Ast/TokenClassParser.php',
+			'SuperKernel\\ComposerResolver\\ComposerJsonReader'                         => $vendorDir . '/super-kernel/composer-resolver/src/ComposerJsonReader.php',
+			'SuperKernel\\ComposerResolver\\ComposerLockReader'                         => $vendorDir . '/super-kernel/composer-resolver/src/ComposerLockReader.php',
+			'SuperKernel\\ComposerResolver\\Concerns\\JsonReaderTrait'                  => $vendorDir . '/super-kernel/composer-resolver/src/Concerns/JsonReaderTrait.php',
+			'SuperKernel\\ComposerResolver\\Contract\\ComposerReaderInterface'          => $vendorDir . '/super-kernel/composer-resolver/src/Contract/ComposerReaderInterface.php',
+			'SuperKernel\\ComposerResolver\\Contract\\PackageCollectorInterface'        => $vendorDir . '/super-kernel/composer-resolver/src/Contract/PackageCollectorInterface.php',
+			'SuperKernel\\ComposerResolver\\Contract\\PackageInterface'                 => $vendorDir . '/super-kernel/composer-resolver/src/Contract/PackageInterface.php',
+			'SuperKernel\\ComposerResolver\\Enum\\PackageTypeEnum'                      => $vendorDir . '/super-kernel/composer-resolver/src/Enum/PackageTypeEnum.php',
+			'SuperKernel\\ComposerResolver\\Factory\\PackageMetadataFactory'            => $vendorDir . '/super-kernel/composer-resolver/src/Factory/PackageMetadataFactory.php',
+			'SuperKernel\\ComposerResolver\\Package'                                    => $vendorDir . '/super-kernel/composer-resolver/src/Package.php',
+			'SuperKernel\\ComposerResolver\\PackageCollector'                           => $vendorDir . '/super-kernel/composer-resolver/src/PackageCollector.php',
+			'SuperKernel\\ComposerResolver\\PackageMetadata'                            => $vendorDir . '/super-kernel/composer-resolver/src/PackageMetadata.php',
+			'SuperKernel\\ComposerResolver\\PackageMetadataCollector'                   => $vendorDir . '/super-kernel/composer-resolver/src/PackageMetadataCollector.php',
+			'SuperKernel\\ComposerResolver\\Provider\\ComposerJsonReaderProvider'       => $vendorDir . '/super-kernel/composer-resolver/src/Provider/ComposerJsonReaderProvider.php',
+			'SuperKernel\\ComposerResolver\\Provider\\ComposerLockReaderProvider'       => $vendorDir . '/super-kernel/composer-resolver/src/Provider/ComposerLockReaderProvider.php',
+			'SuperKernel\\ComposerResolver\\Provider\\PackageCollectorProvider'         => $vendorDir . '/super-kernel/composer-resolver/src/Provider/PackageCollectorProvider.php',
+			'SuperKernel\\ComposerResolver\\Provider\\PackageMetadataCollectorProvider' => $vendorDir . '/super-kernel/composer-resolver/src/Provider/PackageMetadataCollectorProvider.php',
+			'SuperKernel\\Contract\\ApplicationInterface'                               => $vendorDir . '/super-kernel/contract/src/ApplicationInterface.php',
+			'SuperKernel\\Contract\\AttributeMetadataCollectorInterface'                => $vendorDir . '/super-kernel/contract/src/AttributeMetadataCollectorInterface.php',
+			'SuperKernel\\Contract\\AttributeMetadataInterface'                         => $vendorDir . '/super-kernel/contract/src/AttributeMetadataInterface.php',
+			'SuperKernel\\Contract\\ClassAutoloaderInterface'                           => $vendorDir . '/super-kernel/contract/src/ClassAutoloaderInterface.php',
+			'SuperKernel\\Contract\\ContainerInterface'                                 => $vendorDir . '/super-kernel/contract/src/ContainerInterface.php',
+			'SuperKernel\\Contract\\ListenerInterface'                                  => $vendorDir . '/super-kernel/contract/src/ListenerInterface.php',
+			'SuperKernel\\Contract\\PackageMetadataCollectorInterface'                  => $vendorDir . '/super-kernel/contract/src/PackageMetadataCollectorInterface.php',
+			'SuperKernel\\Contract\\PackageMetadataInterface'                           => $vendorDir . '/super-kernel/contract/src/PackageMetadataInterface.php',
+			'SuperKernel\\Contract\\PathResolverInterface'                              => $vendorDir . '/super-kernel/contract/src/PathResolverInterface.php',
+			'SuperKernel\\Contract\\ProcessHandlerInterface'                            => $vendorDir . '/super-kernel/contract/src/ProcessHandlerInterface.php',
+			'SuperKernel\\Contract\\ReflectionCollectorInterface'                       => $vendorDir . '/super-kernel/contract/src/ReflectionCollectorInterface.php',
+			'SuperKernel\\Contract\\StdoutLoggerInterface'                              => $vendorDir . '/super-kernel/contract/src/StdoutLoggerInterface.php',
+			'SuperKernel\\Di\\Attribute\\Definer'                                       => $baseDir . '/src/Attribute/Definer.php',
+			'SuperKernel\\Di\\Attribute\\Resolver'                                      => $baseDir . '/src/Attribute/Resolver.php',
+			'SuperKernel\\Di\\Autoloader\\ClassAutoloader'                              => $baseDir . '/src/Autoloader/ClassAutoloader.php',
+			'SuperKernel\\Di\\Collector\\AttributeMetadata'                             => $baseDir . '/src/Collector/AttributeMetadata.php',
+			'SuperKernel\\Di\\Collector\\AttributeMetadataCollector'                    => $baseDir . '/src/Collector/AttributeMetadataCollector.php',
+			'SuperKernel\\Di\\Collector\\PackageAttributeMetadata'                      => $baseDir . '/src/Collector/PackageAttributeMetadata.php',
+			'SuperKernel\\Di\\Collector\\ProviderCollector'                             => $baseDir . '/src/Collector/ProviderCollector.php',
+			'SuperKernel\\Di\\Collector\\ReflectionCollector'                           => $baseDir . '/src/Collector/ReflectionCollector.php',
+			'SuperKernel\\Di\\Container'                                                => $baseDir . '/src/Container.php',
+			'SuperKernel\\Di\\Contract\\DefinerInterface'                               => $baseDir . '/src/Contract/DefinerInterface.php',
+			'SuperKernel\\Di\\Contract\\DefinitionFactoryInterface'                     => $baseDir . '/src/Contract/DefinitionFactoryInterface.php',
+			'SuperKernel\\Di\\Contract\\DefinitionInterface'                            => $baseDir . '/src/Contract/DefinitionInterface.php',
+			'SuperKernel\\Di\\Contract\\PathResolveAdapterInterface'                    => $baseDir . '/src/Contract/PathResolveAdapterInterface.php',
+			'SuperKernel\\Di\\Contract\\ResolverFactoryInterface'                       => $baseDir . '/src/Contract/ResolverFactoryInterface.php',
+			'SuperKernel\\Di\\Contract\\ResolverInterface'                              => $baseDir . '/src/Contract/ResolverInterface.php',
+			'SuperKernel\\Di\\Definer\\FactoryDefiner'                                  => $baseDir . '/src/Definer/FactoryDefiner.php',
+			'SuperKernel\\Di\\Definer\\ObjectDefiner'                                   => $baseDir . '/src/Definer/ObjectDefiner.php',
+			'SuperKernel\\Di\\Definer\\ProviderDefiner'                                 => $baseDir . '/src/Definer/ProviderDefiner.php',
+			'SuperKernel\\Di\\Definition\\FactoryDefinition'                            => $baseDir . '/src/Definition/FactoryDefinition.php',
+			'SuperKernel\\Di\\Definition\\MethodDefinition'                             => $baseDir . '/src/Definition/MethodDefinition.php',
+			'SuperKernel\\Di\\Definition\\ObjectDefinition'                             => $baseDir . '/src/Definition/ObjectDefinition.php',
+			'SuperKernel\\Di\\Definition\\PropertyDefinition'                           => $baseDir . '/src/Definition/PropertyDefinition.php',
+			'SuperKernel\\Di\\Definition\\ProviderDefinition'                           => $baseDir . '/src/Definition/ProviderDefinition.php',
+			'SuperKernel\\Di\\Exception\\ContainerException'                            => $baseDir . '/src/Exception/ContainerException.php',
+			'SuperKernel\\Di\\Exception\\Container\\FactoryResolutionException'         => $baseDir . '/src/Exception/Container/FactoryResolutionException.php',
+			'SuperKernel\\Di\\Exception\\Container\\ProviderResolutionException'        => $baseDir . '/src/Exception/Container/ProviderResolutionException.php',
+			'SuperKernel\\Di\\Exception\\Container\\ResolverException'                  => $baseDir . '/src/Exception/Container/ResolverException.php',
+			'SuperKernel\\Di\\Exception\\NotFoundException'                             => $baseDir . '/src/Exception/NotFoundException.php',
+			'SuperKernel\\Di\\Factory\\AttributeMetadataFactory'                        => $baseDir . '/src/Factory/AttributeMetadataFactory.php',
+			'SuperKernel\\Di\\Factory\\DefinitionFactory'                               => $baseDir . '/src/Factory/DefinitionFactory.php',
+			'SuperKernel\\Di\\Factory\\ResolverFactory'                                 => $baseDir . '/src/Factory/ResolverFactory.php',
+			'SuperKernel\\Di\\PathResolver\\Adapter\\ComposerAdapter'                   => $baseDir . '/src/PathResolver/Adapter/ComposerAdapter.php',
+			'SuperKernel\\Di\\PathResolver\\Adapter\\PharAdapter'                       => $baseDir . '/src/PathResolver/Adapter/PharAdapter.php',
+			'SuperKernel\\Di\\PathResolver\\Adapter\\StandardAdapter'                   => $baseDir . '/src/PathResolver/Adapter/StandardAdapter.php',
+			'SuperKernel\\Di\\PathResolver\\PathResolver'                               => $baseDir . '/src/PathResolver/PathResolver.php',
+			'SuperKernel\\Di\\ProcessHandler\\PcntlProcessHandler'                      => $baseDir . '/src/ProcessHandler/PcntlProcessHandler.php',
+			'SuperKernel\\Di\\ProcessHandler\\PharProcessHandler'                       => $baseDir . '/src/ProcessHandler/PharProcessHandler.php',
+			'SuperKernel\\Di\\Provider\\AttributeMetadataCollectorProvider'             => $baseDir . '/src/Provider/AttributeMetadataCollectorProvider.php',
+			'SuperKernel\\Di\\Provider\\ClassAutoloaderProvider'                        => $baseDir . '/src/Provider/ClassAutoloaderProvider.php',
+			'SuperKernel\\Di\\Provider\\ContainerProvider'                              => $baseDir . '/src/Provider/ContainerProvider.php',
+			'SuperKernel\\Di\\Provider\\DefinitionFactoryProvider'                      => $baseDir . '/src/Provider/DefinitionFactoryProvider.php',
+			'SuperKernel\\Di\\Provider\\PathResolverProvider'                           => $baseDir . '/src/Provider/PathResolverProvider.php',
+			'SuperKernel\\Di\\Provider\\PharProcessHandlerProvider'                     => $baseDir . '/src/Provider/PharProcessHandlerProvider.php',
+			'SuperKernel\\Di\\Provider\\ReflectionCollectorProvider'                    => $baseDir . '/src/Provider/ReflectionCollectorProvider.php',
+			'SuperKernel\\Di\\Provider\\ResolverFactoryProvider'                        => $baseDir . '/src/Provider/ResolverFactoryProvider.php',
+			'SuperKernel\\Di\\Resolver\\FactoryResolver'                                => $baseDir . '/src/Resolver/FactoryResolver.php',
+			'SuperKernel\\Di\\Resolver\\MethodResolver'                                 => $baseDir . '/src/Resolver/MethodResolver.php',
+			'SuperKernel\\Di\\Resolver\\ObjectResolver'                                 => $baseDir . '/src/Resolver/ObjectResolver.php',
+			'SuperKernel\\Di\\Resolver\\PropertyResolver'                               => $baseDir . '/src/Resolver/PropertyResolver.php',
+			'SuperKernel\\Di\\Resolver\\ProviderResolver'                               => $baseDir . '/src/Resolver/ProviderResolver.php',
+		];
+	}
+
+	public static function getClassMap(): array
+	{
+		return new self()->classMap;
+	}
+}

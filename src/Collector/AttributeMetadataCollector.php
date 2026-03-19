@@ -6,7 +6,7 @@ namespace SuperKernel\Di\Collector;
 use RuntimeException;
 use SuperKernel\Contract\AttributeMetadataCollectorInterface;
 use SuperKernel\Contract\AttributeMetadataInterface;
-use SuperKernel\Contract\PackageMetadataCollectorInterface;
+use SuperKernel\Contract\PackageMetadataInterface;
 use SuperKernel\Contract\PathResolverInterface;
 use SuperKernel\Contract\ProcessHandlerInterface;
 use SuperKernel\Di\Factory\AttributeMetadataFactory;
@@ -23,9 +23,9 @@ final readonly class AttributeMetadataCollector implements AttributeMetadataColl
 	private PathResolverInterface $pathResolver;
 
 	public function __construct(
-		PathResolverInterface             $pathResolver,
-		ProcessHandlerInterface           $processHandler,
-		PackageMetadataCollectorInterface $packageMetadataCollector,
+		PathResolverInterface    $pathResolver,
+		ProcessHandlerInterface  $processHandler,
+		PackageMetadataInterface ...$packageMetadataCollection,
 	)
 	{
 		$this->pathResolver = $pathResolver->to('vendor')->to('.super-kernel')->to('attribute');
@@ -38,7 +38,7 @@ final readonly class AttributeMetadataCollector implements AttributeMetadataColl
 		$attributeMetadataFactory = new AttributeMetadataFactory($this->pathResolver, $processHandler);
 
 		$attributes = [];
-		foreach ($packageMetadataCollector->getPackages() as $package) {
+		foreach ($packageMetadataCollection as $package) {
 			$attributeMetadata = $attributeMetadataFactory->makeAttributeMetadata($package);
 			if (null === $attributeMetadata) {
 				continue;

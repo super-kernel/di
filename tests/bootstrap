@@ -3,12 +3,10 @@
 declare(strict_types=1);
 
 use SuperKernel\Contract\ApplicationInterface;
-use SuperKernel\Di\Provider\ContainerProvider;
+use SuperKernelTest\Di\ApplicationContext;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$container = new ContainerProvider()();
-
-$application = $container->get(ApplicationInterface::class);
+$application = ApplicationContext::getContainer()->get(ApplicationInterface::class);
 
 $application->run();
