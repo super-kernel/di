@@ -13,60 +13,64 @@ use ReflectionParameter;
 use ReflectionProperty;
 use Reflector;
 use SuperKernel\Contract\AttributeMetadataInterface;
-use SuperKernel\Di\Provider\ReflectionCollectorProvider;
+use SuperKernel\Contract\ReflectionCollectorInterface;
+use Throwable;
+use function get_object_vars;
+use function method_exists;
 use function property_exists;
 
 final readonly class AttributeMetadata implements AttributeMetadataInterface
 {
 	private string $attribute;
 
-	private ?string $class;
+	private string $class;
 
-	private ?string $method;
+	private string $method;
 
-	private ?string $function;
+	private string $function;
 
-	private ?string $property;
+	private string $property;
 
-	private ?string $classConstant;
+	private string $classConstant;
 
-	private ?int $parameterIndex;
+	private int $parameterIndex;
 
 	private int $target;
-
-	private array $arguments;
 
 	private object $instance;
 
 	public function __construct(Reflector $reflector, ReflectionAttribute $reflectionAttribute)
 	{
-		$this->class = match (true) {
-			$reflector instanceof ReflectionClass             => $reflector->getName(),
-			$reflector instanceof ReflectionMethod,
-				$reflector instanceof ReflectionProperty,
-				$reflector instanceof ReflectionClassConstant => $reflector->getDeclaringClass()->getName(),
-			default                                           => null,
-		};
-		$this->function = match (true) {
-			$reflector instanceof ReflectionFunction  => $reflector->getName(),
-			$reflector instanceof ReflectionParameter => $reflector->getDeclaringFunction()->getName(),
-			default                                   => null,
-		};
-		$this->method = $reflector instanceof ReflectionMethod ? $reflector->getName() : null;
-		$this->property = $reflector instanceof ReflectionProperty ? $reflector->getName() : null;
-		$this->classConstant = $reflector instanceof ReflectionClassConstant ? $reflector->getName() : null;
-		$this->parameterIndex = $reflector instanceof ReflectionParameter ? $reflector->getPosition() : null;
-		$this->attribute = $reflectionAttribute->getName();
-		$this->arguments = $reflectionAttribute->getArguments();
+		if ($reflector instanceof ReflectionClass
+		    || $reflector instanceof ReflectionMethod
+		    || $reflector instanceof ReflectionProperty
+		    || $reflector instanceof ReflectionClassConstant
+		) {
+			$this->class = method_exists($reflector, 'getDeclaringClass')
+				? $reflector->getDeclaringClass()->getName()
+				: $reflector->getName();
+		}
+
+		if ($reflector instanceof ReflectionMethod) {
+			$this->method = $reflector->getName();
+		}
+		if ($reflector instanceof ReflectionProperty) {
+			$this->property = $reflector->getName();
+		}
+		if ($reflector instanceof ReflectionFunction) {
+			$this->function = $reflector->getName();
+		}
+		if ($reflector instanceof ReflectionClassConstant) {
+			$this->classConstant = $reflector->getName();
+		}
+		if ($reflector instanceof ReflectionParameter) {
+			$this->function = $reflector->getDeclaringFunction()->getName();
+			$this->parameterIndex = $reflector->getPosition();
+		}
+
 		$this->target = $reflectionAttribute->getTarget();
-		$this->instance = $this->createGhostInstance();
-	}
-
-	private function createGhostInstance(): object
-	{
-		$attribute = $this->attribute;
-
-		return new $attribute(...$this->arguments);
+		$this->attribute = $reflectionAttribute->getName();
+		$this->instance = $reflectionAttribute->newInstance();
 	}
 
 	public function getAttribute(): string
@@ -89,66 +93,82 @@ final readonly class AttributeMetadata implements AttributeMetadataInterface
 		return ($this->target & $type) !== 0;
 	}
 
-	public function getReflector(): Reflector
+	public function getReflector(ReflectionCollectorInterface $reflectionCollector): Reflector
 	{
-		return match (true) {
-			null !== $this->class
-			&& null === $this->method
-			&& null === $this->property
-			&& null === $this->classConstant
-			                               => new ReflectionCollectorProvider()()->reflectClass($this->class),
-			null !== $this->method         => new ReflectionCollectorProvider()()->reflectMethod($this->class, $this->method),
-			null !== $this->property       => new ReflectionCollectorProvider()()->reflectProperty($this->class, $this->property),
-			null !== $this->classConstant  => new ReflectionCollectorProvider()()->reflectClassConstant($this->class, $this->classConstant),
-			null !== $this->parameterIndex => new ReflectionCollectorProvider()()->reflectFunction($this->function)->getParameters()[$this->parameterIndex],
-			null !== $this->function       => new ReflectionCollectorProvider()()->reflectFunction($this->function),
-			default                        => throw new LogicException('Unable to resolve reflector.'),
-		};
+		try {
+			return match (true) {
+				!isset($this->class)
+				&& isset($this->method)
+				&& isset($this->property)
+				&& isset($this->classConstant)
+				                             => $reflectionCollector->reflectClass($this->class),
+				isset($this->method)         => $reflectionCollector->reflectMethod($this->class, $this->method),
+				isset($this->property)       => $reflectionCollector->reflectProperty($this->class, $this->property),
+				isset($this->classConstant)  => $reflectionCollector->reflectClassConstant($this->class, $this->classConstant),
+				isset($this->parameterIndex) => $reflectionCollector->reflectFunction($this->function)->getParameters()[$this->parameterIndex],
+				isset($this->function)       => $reflectionCollector->reflectFunction($this->function),
+				default                      => throw new LogicException('Unable to resolve reflector.'),
+			};
+		}
+		catch (Throwable $throwable) {
+			throw new LogicException($throwable->getMessage());
+		}
 	}
 
 	public function getClass(): string
 	{
-		return $this->class ?? throw new LogicException('Class cannot be found.');
+		if (isset($this->class)) {
+			return $this->class;
+		}
+
+		throw new LogicException('Class cannot be found.');
 	}
 
 	public function getMethod(): string
 	{
-		return $this->method ?? throw new LogicException('Method cannot be found.');
+		if (isset($this->method)) {
+			return $this->method;
+		}
+
+		throw new LogicException('Method cannot be found.');
 	}
 
 	public function getFunction(): string
 	{
-		return $this->function ?? throw new LogicException('Function cannot be found.');
+		if (isset($this->function)) {
+			return $this->function;
+		}
+
+		throw new LogicException('Function cannot be found.');
 	}
 
 	public function getProperty(): string
 	{
-		return $this->property ?? throw new LogicException('Property cannot be found.');
+		if (isset($this->property)) {
+			return $this->property;
+		}
+		throw new LogicException('Property cannot be found.');
 	}
 
 	public function getClassConstant(): string
 	{
-		return $this->classConstant ?? throw new LogicException('Class constant cannot be found.');
+		if (isset($this->classConstant)) {
+			return $this->classConstant;
+		}
+		throw new LogicException('Class constant cannot be found.');
 	}
 
 	public function getParameterIndex(): int
 	{
-		return $this->parameterIndex ?? throw new LogicException('Parameter index cannot be found.');
+		if (isset($this->parameterIndex)) {
+			return $this->parameterIndex;
+		}
+		throw new LogicException('Parameter index cannot be found.');
 	}
 
 	public function __serialize(): array
 	{
-		return [
-			'attribute'      => $this->attribute,
-			'class'          => $this->class,
-			'method'         => $this->method,
-			'function'       => $this->function,
-			'property'       => $this->property,
-			'classConstant'  => $this->classConstant,
-			'parameterIndex' => $this->parameterIndex,
-			'target'         => $this->target,
-			'arguments'      => $this->arguments,
-		];
+		return get_object_vars($this);
 	}
 
 	public function __unserialize(array $data): void
@@ -158,6 +178,5 @@ final readonly class AttributeMetadata implements AttributeMetadataInterface
 				$this->{$key} = $value;
 			}
 		}
-		$this->instance = $this->createGhostInstance();
 	}
 }

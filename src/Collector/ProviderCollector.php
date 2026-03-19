@@ -15,21 +15,19 @@ final readonly class ProviderCollector
 	{
 		$containers = [];
 		foreach ($attributeCollector->getClassesByAttribute(Provider::class) as $attribute) {
-			if ($attribute->getAttribute() !== Provider::class) {
-				continue;
-			}
-
-			$instance = $attribute->getInstance();
-			$id = $instance->class;
-			$priority = $containers[$id]['priority'] ?? -1;
-			if ($instance->priority >= $priority) {
-				$containers[$id] = [
-					'class'    => $attribute->getClass(),
-					'priority' => $instance->priority,
-				];
+			$attributeInstance = $attribute->getInstance();
+			if ($attributeInstance instanceof Provider) {
+				$instance = $attribute->getInstance();
+				$id = $instance->class;
+				$priority = $containers[$id]['priority'] ?? -1;
+				if ($instance->priority >= $priority) {
+					$containers[$id] = [
+						'class'    => $attribute->getClass(),
+						'priority' => $instance->priority,
+					];
+				}
 			}
 		}
-
 		$this->containers = array_map(fn($item) => $item['class'], $containers);
 	}
 

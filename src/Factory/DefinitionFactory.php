@@ -56,8 +56,6 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 
 	public function getDefinition(string $id): ?DefinitionInterface
 	{
-		var_dump($id);
-		usleep(500);
 		if (isset($this->definitions[$id]) || array_key_exists($id, $this->definitions)) {
 			return $this->definitions[$id];
 		}
