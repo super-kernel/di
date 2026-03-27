@@ -1,0 +1,35 @@
+{
+    "name": "super-kernel/di",
+    "description": "The di component for super-kernel.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "php",
+        "super-kernel",
+        "di",
+        "container",
+        "ioc"
+    ],
+    "homepage": "https://github.com/super-kernel/di",
+    "support": {
+        "issues": "https://github.com/super-kernel/di/issues",
+        "source": "https://github.com/super-kernel/di"
+    },
+    "autoload": {
+        "psr-4": {
+            "SuperKernel\\Di\\": "src/"
+        }
+    },
+    "config": {
+        "classmap-authoritative": true,
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": "~8.4.0",
+        "super-kernel/attribute": "~1.0.0",
+        "super-kernel/contract": "~1.0.0"
+    }
+}
