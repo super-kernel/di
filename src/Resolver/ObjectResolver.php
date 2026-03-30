@@ -93,17 +93,17 @@ final class ObjectResolver implements ResolverInterface
 		try {
 			$reflectionClass = $this->reflectionCollector->reflectClass($className);
 
-			$methodDefinition = new MethodDefinition($className, '__construct', $parameters);
 
 			return $reflectionClass->newLazyGhost(function (object $instance) use (
-				$reflectionClass,
-				$methodDefinition,
+				$reflectionClass, $className, $parameters,
 			) {
 				$this->injectAutowiredProperties($instance, $reflectionClass);
 
-				$arguments = $this->resolverFactory->getResolver($methodDefinition)->resolve($methodDefinition);
-
 				if ($reflectionClass->hasMethod('__construct')) {
+					$methodDefinition = new MethodDefinition($className, '__construct', $parameters);
+
+					$arguments = $this->resolverFactory->getResolver($methodDefinition)->resolve($methodDefinition);
+
 					$instance->__construct(...$arguments);
 				}
 			});
