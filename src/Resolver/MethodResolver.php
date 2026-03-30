@@ -48,11 +48,11 @@ final class MethodResolver implements ResolverInterface
 			throw ResolverException::unsupportedDefinition($definition);
 		}
 
-		$class = $definition->getClassName();
-		$method = $definition->getMethodName();
+		$className = $definition->getClassName();
+		$methodName = $definition->getName();
 
 		try {
-			$reflectionMethod = $this->reflectionCollector->reflectMethod($class, $method);
+			$reflectionMethod = $this->reflectionCollector->reflectMethod($className, $methodName);
 
 			$arguments = [];
 			foreach ($reflectionMethod->getParameters() as $reflectionParameter) {
@@ -62,7 +62,7 @@ final class MethodResolver implements ResolverInterface
 			return $arguments;
 		}
 		catch (Throwable $throwable) {
-			throw ResolverException::parameterResolutionFailed($class, $method, $throwable);
+			throw ResolverException::parameterResolutionFailed($className, $methodName, $throwable);
 		}
 	}
 
@@ -75,7 +75,7 @@ final class MethodResolver implements ResolverInterface
 	 * @throws NotFoundExceptionInterface
 	 * @throws ReflectionException
 	 */
-	public function getParameter(ReflectionParameter $reflectionParameter, MethodDefinition $definition): mixed
+	private function getParameter(ReflectionParameter $reflectionParameter, MethodDefinition $definition): mixed
 	{
 		$parameterName = $reflectionParameter->getName();
 		$parameters = $definition->getParameters();

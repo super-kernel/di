@@ -20,6 +20,11 @@
             "SuperKernel\\Di\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "SuperKernelTest\\Di\\": "tests/"
+        }
+    },
     "config": {
         "classmap-authoritative": true,
         "optimize-autoloader": true,
@@ -31,5 +36,15 @@
         "php": "~8.4.0",
         "super-kernel/attribute": "~1.0.0",
         "super-kernel/contract": "~1.0.0"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        }
+    },
+    "require-dev": {
+        "super-kernel/bootstrap": "~1.0.0",
+        "super-kernel/event-dispatcher": "~1.0.0",
+        "super-kernel/framework": "~1.0.0"
     }
 }

@@ -17,10 +17,8 @@ use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Definition\MethodDefinition;
-use SuperKernel\Di\Definition\PropertyDefinition;
 use SuperKernel\Di\Exception\Container\ResolverException;
 use Throwable;
-use function method_exists;
 
 #[Resolver]
 final class ObjectResolver implements ResolverInterface
@@ -80,61 +78,65 @@ final class ObjectResolver implements ResolverInterface
 
 	/**
 	 * @param DefinitionInterface $definition
+	 * @param array               $parameters
 	 *
 	 * @return object
-	 * @throws ReflectionException
 	 */
-	public function resolve(DefinitionInterface $definition): object
+	public function resolve(DefinitionInterface $definition, array $parameters = []): object
 	{
 		if (!($definition instanceof ObjectDefinition)) {
 			throw ResolverException::unsupportedDefinition($definition);
 		}
 
-		$reflectClass = $this->reflectionCollector->reflectClass($definition->getClassName());
-		return $reflectClass->newLazyGhost(
-			initializer: fn(object $object) => $this->createInstance($object, $reflectClass),
-		);
+		$className = $definition->getClassName();
+
+		try {
+			$reflectionClass = $this->reflectionCollector->reflectClass($className);
+
+			$methodDefinition = new MethodDefinition($className, '__construct', $parameters);
+
+			return $reflectionClass->newLazyGhost(function (object $instance) use (
+				$reflectionClass,
+				$methodDefinition,
+			) {
+				$this->injectAutowiredProperties($instance, $reflectionClass);
+
+				$arguments = $this->resolverFactory->getResolver($methodDefinition)->resolve($methodDefinition);
+
+				if ($reflectionClass->hasMethod('__construct')) {
+					$instance->__construct(...$arguments);
+				}
+			});
+		}
+		catch (Throwable $throwable) {
+			throw ResolverException::lazyInitializationNotSupported($definition->getName(), $throwable);
+		}
 	}
 
 	/**
 	 * @param object          $object
-	 * @param ReflectionClass $reflectClass
+	 * @param ReflectionClass $reflection
 	 *
 	 * @return void
+	 * @throws ContainerExceptionInterface
+	 * @throws NotFoundExceptionInterface
+	 * @throws ReflectionException
 	 */
-	private function createInstance(object $object, ReflectionClass $reflectClass): void
+	private function injectAutowiredProperties(object $object, ReflectionClass $reflection): void
 	{
-		$className = $reflectClass->getName();
-		$properties = [];
+		$className = $reflection->getName();
+		$attributes = $this->annotationCollector->getPropertiesByAttribute(Autowired::class);
 
-		try {
-			foreach ($this->annotationCollector->getPropertiesByAttribute(Autowired::class) as $attribute) {
-				if ($attribute->getClass() === $className) {
-					$propertyName = $attribute->getProperty();
-					$propertyDefinition = new PropertyDefinition($propertyName, $className);
-					$propertyValue = $this->resolverFactory->getResolver($propertyDefinition)->resolve($propertyDefinition);
-					$properties[$propertyName] = $propertyValue;
-				}
+		foreach ($attributes as $attribute) {
+			if ($attribute->getClass() !== $className) {
+				continue;
 			}
 
-			foreach ($properties as $name => $value) {
-				$reflectionProperty = $reflectClass->getProperty($name);
-				if (method_exists($reflectionProperty, 'setAccessible')) {
-					/** @noinspection PhpExpressionResultUnusedInspection */
-					$reflectionProperty->setAccessible(true);
-				}
-				$reflectionProperty->setRawValueWithoutLazyInitialization($object, $value);
-			}
+			$propertyName = $attribute->getProperty();
+			$propertyReflection = $reflection->getProperty($propertyName);
 
-			if ($reflectClass->hasMethod('__construct')) {
-				$parameterDefinition = new MethodDefinition($className, '__construct');
-
-				$arguments = $this->resolverFactory->getResolver($parameterDefinition)->resolve($parameterDefinition);
-				$object->__construct(...$arguments);
-			}
-		}
-		catch (Throwable $throwable) {
-			throw ResolverException::lazyInitializationNotSupported($className, $throwable);
+			$value = $this->container->get($propertyReflection->getType()?->getName());
+			$propertyReflection->setValue($object, $value);
 		}
 	}
 }

@@ -22,11 +22,6 @@ final readonly class MethodDefinition implements DefinitionInterface
 		return $this->className;
 	}
 
-	public function getMethodName(): string
-	{
-		return $this->methodName;
-	}
-
 	public function getParameters(): array
 	{
 		return $this->parameters;
