@@ -34,17 +34,12 @@
     "prefer-stable": true,
     "require": {
         "php": "~8.4.0",
-        "super-kernel/attribute": "~1.0.0",
-        "super-kernel/contract": "~1.0.0"
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-main": "1.0.x-dev"
-        }
+        "super-kernel/attribute": "dev-main",
+        "super-kernel/contract": "dev-main"
     },
     "require-dev": {
-        "super-kernel/bootstrap": "~1.0.0",
-        "super-kernel/event-dispatcher": "~1.0.0",
-        "super-kernel/framework": "~1.0.0"
+        "super-kernel/bootstrap": "dev-main",
+        "super-kernel/event-dispatcher": "dev-main",
+        "super-kernel/framework": "dev-main"
     }
 }
