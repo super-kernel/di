@@ -32,8 +32,8 @@ final class ResolverFactory implements ResolverFactoryInterface
 		get {
 			if (!isset($this->resolvers)) {
 				$resolvers = [];
-				foreach ($this->annotationCollector->getClassesByAttribute(Resolver::class) as $attribute) {
-					$resolver = $attribute->getClass();
+				foreach ($this->annotationCollector->getClassesByAttribute(Resolver::class) as $annotation) {
+					$resolver = $annotation->getClass();
 					$resolvers[] = new $resolver($this->container);
 				}
 				$this->resolvers = $resolvers;

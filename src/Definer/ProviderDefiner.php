@@ -6,6 +6,7 @@ namespace SuperKernel\Di\Definer;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use SuperKernel\Annotator\Annotation\ClassAnnotation;
 use SuperKernel\Attribute\Factory;
 use SuperKernel\Attribute\Provider;
 use SuperKernel\Contract\AnnotationCollectorInterface;
@@ -18,6 +19,7 @@ use SuperKernel\Di\Definition\FactoryDefinition;
 use SuperKernel\Di\Definition\ObjectDefinition;
 use SuperKernel\Di\Exception\Container\ProviderResolutionException;
 use Throwable;
+use function array_any;
 use function class_exists;
 use function is_null;
 
@@ -91,16 +93,11 @@ final class ProviderDefiner implements DefinerInterface
 			}
 		}
 		catch (Throwable) {
-			$classAttributes = $this->annotationCollector->getClassAttributes($provider);
+			$annotations = $this->annotationCollector->getClassesByAttribute($provider);
 
-			foreach ($classAttributes as $classAttribute) {
-				if (!($classAttribute instanceof AnnotationInterface)) {
-					continue;
-				}
-
-				if (Factory::class === $classAttribute->getAttribute()) {
-					return new FactoryDefinition($id, $provider);
-				}
+			/* @var ClassAnnotation $annotation */
+			if (array_any($annotations, fn($annotation) => Factory::class === $annotation->getClass())) {
+				return new FactoryDefinition($id, $provider);
 			}
 		}
 

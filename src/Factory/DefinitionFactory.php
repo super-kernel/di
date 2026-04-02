@@ -24,6 +24,7 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 		get {
 			if (!isset($this->annotationCollector)) {
 				$this->annotationCollector = $this->container->get(AnnotationCollectorInterface::class);
+				var_dump($this->annotationCollector);
 			}
 			return $this->annotationCollector;
 		}
@@ -59,6 +60,8 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 		if (isset($this->definitions[$id]) || array_key_exists($id, $this->definitions)) {
 			return $this->definitions[$id];
 		}
+
+
 
 		foreach ($this->getDefiners() as $definer) {
 			if ($definer->support($id)) {

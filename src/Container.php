@@ -26,10 +26,7 @@ final class Container implements ContainerInterface
 
 	private array $resolverEntries;
 
-	final public function __construct(
-		AnnotationCollectorInterface $annotationCollector,
-		ReflectionCollectorInterface $reflectionCollector,
-	)
+	final public function __construct(AnnotationCollectorInterface $annotationCollector, ReflectionCollectorInterface $reflectionCollector)
 	{
 		$this->resolverFactory = new ResolverFactory($this);
 		$this->definitionFactory = new DefinitionFactory($this);

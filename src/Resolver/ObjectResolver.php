@@ -8,6 +8,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
 use ReflectionException;
+use SuperKernel\Annotator\Annotation\PropertyAnnotation;
 use SuperKernel\Attribute\Autowired;
 use SuperKernel\Contract\AnnotationCollectorInterface;
 use SuperKernel\Contract\ReflectionCollectorInterface;
@@ -125,14 +126,15 @@ final class ObjectResolver implements ResolverInterface
 	private function injectAutowiredProperties(object $object, ReflectionClass $reflection): void
 	{
 		$className = $reflection->getName();
-		$attributes = $this->annotationCollector->getPropertiesByAttribute(Autowired::class);
+		$annotations = $this->annotationCollector->getPropertiesByAttribute(Autowired::class);
 
-		foreach ($attributes as $attribute) {
-			if ($attribute->getClass() !== $className) {
+		/* @var PropertyAnnotation $annotation */
+		foreach ($annotations as $annotation) {
+			if ($annotation->getClass() !== $className) {
 				continue;
 			}
 
-			$propertyName = $attribute->getProperty();
+			$propertyName = $annotation->getProperty();
 			$propertyReflection = $reflection->getProperty($propertyName);
 
 			$value = $this->container->get($propertyReflection->getType()?->getName());
