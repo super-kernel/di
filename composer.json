@@ -1,0 +1,42 @@
+{
+    "name": "super-kernel/di",
+    "description": "PSR-11 shared-service container with constructor autowiring for SuperKernel.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4.27 <8.5",
+        "psr/container": "^2.0.2",
+        "psr/log": "^3.0.2",
+        "super-kernel/annotator": "dev-main",
+        "super-kernel/attribute": "dev-main",
+        "super-kernel/composer": "dev-main",
+        "super-kernel/contract": "dev-main",
+        "super-kernel/reflector": "dev-main",
+        "super-kernel/scan-isolation": "dev-main",
+        "super-kernel/tokenizer": "dev-main"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95.27",
+        "phpunit/phpunit": "^13.4.3"
+    },
+    "provide": {
+        "psr/container-implementation": "2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SuperKernel\\Di\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SuperKernel\\Di\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "format": "@php vendor/bin/php-cs-fixer fix --show-progress=bar --no-ansi",
+        "format:check": "@php vendor/bin/php-cs-fixer check --show-progress=bar --no-ansi --diff",
+        "test": "@php vendor/bin/phpunit"
+    }
+}
