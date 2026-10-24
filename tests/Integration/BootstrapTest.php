@@ -129,7 +129,9 @@ final class BootstrapTest extends TestCase
                 'sharedClassNameParser' => $service->classNameParser === $container->get(
                     SuperKernel\Tokenizer\Contract\ClassNameParserInterface::class,
                 ),
-                'parsedClassNames' => $service->classNameParser->parseFile(__DIR__ . '/src/Service.php'),
+                'parsedClassNames' => $service->classNameParser->parse(
+                    new SuperKernel\Tokenizer\Stream\FileStream(__DIR__ . '/src/Service.php'),
+                ),
                 'aliases' => $aliases,
                 'facadeReflector' => (new ReflectionProperty(
                     SuperKernel\Reflector\Facade\ReflectorFacade::class,
