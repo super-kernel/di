@@ -62,6 +62,15 @@ final readonly class ContainerProvider
         Psr\Container\ContainerInterface::class,
         Psr\Container\NotFoundExceptionInterface::class,
 
+        // psr/http-message
+        Psr\Http\Message\MessageInterface::class,
+        Psr\Http\Message\RequestInterface::class,
+        Psr\Http\Message\ResponseInterface::class,
+        Psr\Http\Message\ServerRequestInterface::class,
+        Psr\Http\Message\StreamInterface::class,
+        Psr\Http\Message\UploadedFileInterface::class,
+        Psr\Http\Message\UriInterface::class,
+
         // psr/log
         Psr\Log\AbstractLogger::class,
         Psr\Log\InvalidArgumentException::class,
@@ -240,6 +249,7 @@ final readonly class ContainerProvider
         // super-kernel/tokenizer
         SuperKernel\Tokenizer\ClassNameParser::class,
         SuperKernel\Tokenizer\Contract\ClassNameParserInterface::class,
+        SuperKernel\Tokenizer\Stream\FileStream::class,
     ];
 
     /**
