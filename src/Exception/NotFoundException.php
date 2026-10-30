@@ -12,7 +12,7 @@ use function sprintf;
 
 final class NotFoundException extends InvalidArgumentException implements NotFoundExceptionInterface
 {
-    private function __construct(private readonly string $identifier, ?Throwable              $previous = null)
+    public function __construct(private readonly string $identifier, ?Throwable              $previous = null)
     {
         parent::__construct(sprintf('Container entry "%s" has no definition.', $identifier), 0, $previous);
     }

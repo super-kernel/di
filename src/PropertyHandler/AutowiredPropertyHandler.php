@@ -7,13 +7,9 @@ namespace SuperKernel\Di\PropertyHandler;
 use InvalidArgumentException;
 use LogicException;
 use Psr\Container\ContainerExceptionInterface;
-use ReflectionClass;
 use ReflectionException;
 use ReflectionNamedType;
-use ReflectionProperty;
-use ReflectionType;
 use ReflectionUnionType;
-use stdClass;
 use SuperKernel\Attribute\Autowired;
 use SuperKernel\Attribute\PropertyHandler;
 use SuperKernel\Contract\ContainerInterface;
@@ -72,124 +68,86 @@ final class AutowiredPropertyHandler implements PropertyAttributeHandlerInterfac
         }
 
         $class = $this->reflector->reflectClass($context->className());
-        $context->assign($this->resolveProperty($class, $context->property(), $attribute));
-    }
+        $property = $context->property();
+        $identifier = $attribute->identifier;
 
-    /**
-     * @param ReflectionClass<object> $class
-     *
-     * @throws ContainerExceptionInterface When property resolution or lazy proxy creation fails
-     * @throws ReflectionException         When a lazy proxy candidate class cannot be reflected
-     */
-    private function resolveProperty(
-        ReflectionClass    $class,
-        ReflectionProperty $property,
-        Autowired          $autowired,
-    ): mixed
-    {
-        $identifier = $autowired->identifier ?? $this->propertyIdentifier($class, $property->getType());
+        if (null === $identifier) {
+            $type = $property->getType();
+            $memberTypes = $type instanceof ReflectionUnionType ? $type->getTypes() : [
+                $type,
+            ];
+            $candidates = [];
 
-        if (null !== $identifier) {
-            return $this->lazyProxy($class, $property, $identifier);
-        }
-
-        if ($property->hasDefaultValue()) {
-            return $property->getDefaultValue();
-        }
-
-        throw ResolutionException::unresolvableProperty(
-            $class->getName(),
-            $property->getName(),
-            null === $property->getType() ? null : (string)$property->getType(),
-        );
-    }
-
-    /**
-     * @param ReflectionClass<object> $class
-     *
-     * @return class-string|null
-     */
-    private function propertyIdentifier(ReflectionClass $class, ?ReflectionType $type): ?string
-    {
-        $candidates = [];
-
-        if ($type instanceof ReflectionNamedType) {
-            $candidate = $this->typeIdentifier($class, $type);
-
-            if (null !== $candidate) {
-                $candidates[] = $candidate;
-            }
-        } elseif ($type instanceof ReflectionUnionType) {
-            foreach ($type->getTypes() as $unionType) {
-                if (!$unionType instanceof ReflectionNamedType) {
+            foreach ($memberTypes as $memberType) {
+                if (!$memberType instanceof ReflectionNamedType || $memberType->isBuiltin()) {
                     continue;
                 }
 
-                $candidate = $this->typeIdentifier($class, $unionType);
+                $candidate = match ($memberType->getName()) {
+                    'self',
+                    'static' => $class->getName(),
+                    'parent' => $class->getParentClass()?->getName(),
+                    default  => $memberType->getName(),
+                };
 
-                if (null !== $candidate) {
+                if (null !== $candidate && (class_exists($candidate) || interface_exists($candidate))) {
                     $candidates[] = $candidate;
                 }
             }
+
+            $candidates = array_values(array_unique($candidates));
+            $identifier = 1 === count($candidates) ? $candidates[0] : null;
         }
 
-        $candidates = array_values(array_unique($candidates));
+        if (null === $identifier) {
+            if (!$property->hasDefaultValue()) {
+                throw ResolutionException::unresolvableProperty(
+                    $class->getName(),
+                    $property->getName(),
+                    null === $property->getType() ? null : (string)$property->getType(),
+                );
+            }
 
-        return 1 === count($candidates) ? $candidates[0] : null;
-    }
+            $context->assign($property->getDefaultValue());
 
-    /**
-     * @param ReflectionClass<object> $class
-     *
-     * @return class-string|null
-     */
-    private function typeIdentifier(ReflectionClass $class, ReflectionNamedType $type): ?string
-    {
-        if ($type->isBuiltin()) {
-            return null;
+            return;
         }
 
-        $identifier = match ($type->getName()) {
-            'self',
-            'static' => $class->getName(),
-            'parent' => $class->getParentClass()?->getName(),
-            default  => $type->getName(),
-        };
+        $proxyClassName = null;
 
-        if (null === $identifier || (!class_exists($identifier) && !interface_exists($identifier))) {
-            return null;
+        if (class_exists($identifier)) {
+            $reflection = $this->reflector->reflectClass($identifier);
+
+            if ($reflection->isInstantiable()) {
+                $proxyClassName = $reflection->getName();
+            }
         }
-
-        return $identifier;
-    }
-
-    /**
-     * @param ReflectionClass<object> $class
-     * @param class-string            $identifier
-     *
-     * @throws ContainerExceptionInterface When proxy class resolution or lazy proxy creation fails
-     * @throws ReflectionException         When a lazy proxy candidate class cannot be reflected
-     */
-    private function lazyProxy(
-        ReflectionClass    $class,
-        ReflectionProperty $property,
-        string             $identifier,
-    ): object
-    {
-        $proxyClassName = $this->proxyClassName($identifier);
 
         if (null === $proxyClassName) {
-            return $this->container->get($identifier);
+            $definitionFactory = $this->container->get(DefinitionFactoryInterface::class);
+            $definition = $definitionFactory->get($identifier);
+
+            if ($definition instanceof ProviderDefinition) {
+                $proxyClassName = $definition->providerClass;
+            }
+        }
+
+        if (null === $proxyClassName) {
+            $context->assign($this->container->get($identifier));
+
+            return;
         }
 
         $proxyClass = $this->reflector->reflectClass($proxyClassName);
 
-        if (!self::supportsLazyProxy($proxyClass)) {
-            return $this->container->get($identifier);
+        if (!NativeLazyProxy::supports($proxyClass)) {
+            $context->assign($this->container->get($identifier));
+
+            return;
         }
 
         try {
-            return $proxyClass->newLazyProxy(function () use ($identifier, $proxyClass, $proxyClassName): object {
+            $proxy = $proxyClass->newLazyProxy(function () use ($identifier, $proxyClass, $proxyClassName): object {
                 $instance = $this->container->get($identifier);
 
                 if (is_object($instance) && $proxyClass->isInstance($instance)) {
@@ -210,59 +168,7 @@ final class AutowiredPropertyHandler implements PropertyAttributeHandlerInterfac
                 $throwable,
             );
         }
-    }
 
-    /**
-     * @param class-string $identifier
-     *
-     * @return class-string|null
-     *
-     * @throws ContainerExceptionInterface When reflection services or definition lookup fail
-     * @throws ReflectionException         When the identifier class cannot be reflected
-     */
-    private function proxyClassName(string $identifier): ?string
-    {
-        if (class_exists($identifier)) {
-            $reflection = $this->reflector->reflectClass($identifier);
-
-            if ($reflection->isInstantiable()) {
-                return $reflection->getName();
-            }
-        }
-
-        $definitionFactory = $this->container->get(DefinitionFactoryInterface::class);
-        $definition = $definitionFactory->get($identifier);
-
-        if ($definition instanceof ProviderDefinition) {
-            return $definition->providerClass;
-        }
-
-        return null;
-    }
-
-    /** @param ReflectionClass<object> $class */
-    private static function supportsLazyProxy(ReflectionClass $class): bool
-    {
-        if (!$class->isInstantiable()) {
-            return false;
-        }
-
-        $hasStoredProperties = false;
-
-        do {
-            if ($class->isInternal() && stdClass::class !== $class->getName()) {
-                return false;
-            }
-
-            foreach ($class->getProperties() as $property) {
-                if (!$property->isStatic() && !$property->isVirtual()) {
-                    $hasStoredProperties = true;
-                }
-            }
-
-            $class = $class->getParentClass();
-        } while (false !== $class);
-
-        return $hasStoredProperties;
+        $context->assign($proxy);
     }
 }

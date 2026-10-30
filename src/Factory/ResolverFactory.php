@@ -9,8 +9,6 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use SplPriorityQueue;
 use SuperKernel\Attribute\Resolver as ResolverAttribute;
-use SuperKernel\Contract\AnnotationCollectorInterface;
-use SuperKernel\Contract\AttributeMetadataInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
@@ -29,20 +27,39 @@ final class ResolverFactory implements ResolverFactoryInterface
     private SplPriorityQueue $resolvers {
         /**
          * @throws ContainerExceptionInterface When the annotation collector is missing or cannot be resolved
+         * @throws InvalidArgumentException    When an annotated resolver is not a ResolverInterface or cannot be
+         *                                     constructed with the root container
          */
         get {
             if (!isset($this->resolvers)) {
-                $collector = $this->collector();
+                $collector = ReservedCollector::from($this->container);
 
                 $resolvers = new SplPriorityQueue();
                 $resolvers->setExtractFlags(SplPriorityQueue::EXTR_DATA);
                 $position = 0;
 
                 foreach ($collector->getClassesWithAttribute(ResolverAttribute::class) as $className => [$attribute]) {
+                    if (!is_subclass_of($className, ResolverInterface::class)) {
+                        throw new InvalidArgumentException(sprintf(
+                            'Annotated resolver %s must implement %s.',
+                            $className,
+                            ResolverInterface::class,
+                        ));
+                    }
+
+                    try {
+                        $resolver = new $className($this->container);
+                    } catch (Throwable $throwable) {
+                        throw new InvalidArgumentException(sprintf(
+                            'Unable to create annotated resolver %s with the root container.',
+                            $className,
+                        ), 0, $throwable);
+                    }
+
                     $resolvers->insert(
-                        self::createResolver($className, $this->container),
+                        $resolver,
                         [
-                            self::priority($attribute),
+                            $attribute->attribute()->priority,
                             -$position,
                         ],
                     );
@@ -58,40 +75,6 @@ final class ResolverFactory implements ResolverFactoryInterface
 
     public function __construct(private readonly ContainerInterface $container)
     {
-    }
-
-    /**
-     * @param class-string $className
-     */
-    private static function createResolver(
-        string             $className,
-        ContainerInterface $container,
-    ): ResolverInterface
-    {
-        if (!is_subclass_of($className, ResolverInterface::class)) {
-            throw new InvalidArgumentException(sprintf(
-                'Annotated resolver %s must implement %s.',
-                $className,
-                ResolverInterface::class,
-            ));
-        }
-
-        try {
-            return new $className($container);
-        } catch (Throwable $throwable) {
-            throw new InvalidArgumentException(sprintf(
-                'Unable to create annotated resolver %s with the root container.',
-                $className,
-            ), 0, $throwable);
-        }
-    }
-
-    /**
-     * @param AttributeMetadataInterface<ResolverAttribute> $attribute
-     */
-    private static function priority(AttributeMetadataInterface $attribute): int
-    {
-        return $attribute->attribute()->priority;
     }
 
     public function resolve(DefinitionInterface $definition): mixed
@@ -123,11 +106,4 @@ final class ResolverFactory implements ResolverFactoryInterface
 
         return false;
     }
-
-    /** @throws ContainerExceptionInterface When the annotation collector cannot be resolved */
-    private function collector(): AnnotationCollectorInterface
-    {
-        return $this->container->get(AnnotationCollectorInterface::class);
-    }
-
 }

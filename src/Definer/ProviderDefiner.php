@@ -55,7 +55,7 @@ final readonly class ProviderDefiner implements DefinerInterface
 
     public function get(string $id): DefinitionInterface
     {
-        if (!$this->support($id)) {
+        if (!array_key_exists($id, $this->providers)) {
             throw NotFoundException::forIdentifier($id);
         }
 

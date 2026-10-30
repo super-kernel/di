@@ -30,8 +30,8 @@ final class RetainedEntries implements RetainedEntriesInterface
 
     public function retain(string $id, mixed $value): mixed
     {
-        if ($this->has($id)) {
-            return $this->get($id);
+        if (array_key_exists($id, $this->entries)) {
+            return $this->entries[$id];
         }
 
         return $this->entries[$id] = $value;
