@@ -31,14 +31,6 @@ Paths below are relative to `src/` and the package namespace.
 
 Implementation helpers retain an `@internal` boundary; a responsibility namespace does not make them extension points.
 
-### Public namespaces
-
-Use the following component declarations:
-
-- `Property\PropertyContext`
-- `Property\PropertyDispatcher`
-- `Storage\RetainedEntries`
-
 ## Root ownership
 
 Construct a root from an Annotator snapshot:
