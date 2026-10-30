@@ -55,7 +55,7 @@ final readonly class FactoryDefiner implements DefinerInterface
 
     public function get(string $id): DefinitionInterface
     {
-        if (!$this->support($id)) {
+        if (!array_key_exists($id, $this->factoryProviders)) {
             throw NotFoundException::forIdentifier($id);
         }
 

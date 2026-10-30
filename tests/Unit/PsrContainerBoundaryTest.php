@@ -28,7 +28,7 @@ final class PsrContainerBoundaryTest extends TestCase
             self::fail('An incompatible collector must fail at the consumer boundary.');
         } catch (ResolutionException $exception) {
             self::assertInstanceOf(TypeError::class, $exception->getPrevious());
-            self::assertStringContainsString('DefinitionFactory::collector()', $exception->getPrevious()->getMessage());
+            self::assertStringContainsString('ReservedCollector::from()', $exception->getPrevious()->getMessage());
             self::assertStringContainsString(
                 AnnotationCollectorInterface::class,
                 $exception->getPrevious()->getMessage(),
@@ -42,7 +42,7 @@ final class PsrContainerBoundaryTest extends TestCase
         $definition = $this->createStub(DefinitionInterface::class);
 
         $this->expectException(TypeError::class);
-        $this->expectExceptionMessageIsOrContains('ResolverFactory::collector()');
+        $this->expectExceptionMessageIsOrContains('ReservedCollector::from()');
 
         $factory->support($definition);
     }
@@ -53,7 +53,7 @@ final class PsrContainerBoundaryTest extends TestCase
         $dispatcher = new PropertyDispatcher($this->wrongCollector());
 
         $this->expectException(TypeError::class);
-        $this->expectExceptionMessageIsOrContains('PropertyDispatcher::collector()');
+        $this->expectExceptionMessageIsOrContains('ReservedCollector::from()');
 
         self::assertFalse($dispatcher->supports(stdClass::class));
     }

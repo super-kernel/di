@@ -11,7 +11,6 @@ use ReflectionClass;
 use SplPriorityQueue;
 use SuperKernel\Attribute\Definer as DefinerAttribute;
 use SuperKernel\Contract\AnnotationCollectorInterface;
-use SuperKernel\Contract\AttributeMetadataInterface;
 use SuperKernel\Di\Contract\DefinerInterface;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
@@ -30,19 +29,68 @@ final class DefinitionFactory implements DefinitionFactoryInterface
     private SplPriorityQueue $definers {
         /**
          * @throws ContainerExceptionInterface When the annotation collector is missing or cannot be resolved
+         * @throws InvalidArgumentException    When an annotated definer cannot be reflected, validated, or constructed
          */
         get {
             if (!isset($this->definers)) {
-                $collector = $this->collector();
+                $collector = ReservedCollector::from($this->container);
                 $definers = new SplPriorityQueue();
                 $definers->setExtractFlags(SplPriorityQueue::EXTR_DATA);
                 $position = 0;
 
                 foreach ($collector->getClassesWithAttribute(DefinerAttribute::class) as $className => [$attribute]) {
+                    try {
+                        $reflection = new ReflectionClass($className);
+                    } catch (Throwable $throwable) {
+                        throw new InvalidArgumentException(sprintf(
+                            'Unable to reflect annotated definer %s.',
+                            $className,
+                        ), 0, $throwable);
+                    }
+
+                    if (!$reflection->isInstantiable() || !$reflection->implementsInterface(DefinerInterface::class)) {
+                        throw new InvalidArgumentException(sprintf(
+                            'Annotated definer %s must be an instantiable implementation of %s.',
+                            $className,
+                            DefinerInterface::class,
+                        ));
+                    }
+
+                    $constructor = $reflection->getConstructor();
+                    $requiredParameters = $constructor?->getNumberOfRequiredParameters() ?? 0;
+
+                    if (1 < $requiredParameters) {
+                        throw new InvalidArgumentException(sprintf(
+                            'Annotated definer %s must have no required constructor parameters or accept '
+                            . '%s as its only required bootstrap dependency.',
+                            $className,
+                            AnnotationCollectorInterface::class,
+                        ));
+                    }
+
+                    try {
+                        $definer = 0 === $requiredParameters
+                            ? $reflection->newInstance()
+                            : $reflection->newInstance($collector);
+                    } catch (Throwable $throwable) {
+                        throw new InvalidArgumentException(sprintf(
+                            'Unable to create annotated definer %s with the available bootstrap dependencies.',
+                            $className,
+                        ), 0, $throwable);
+                    }
+
+                    if (!$definer instanceof DefinerInterface) {
+                        throw new InvalidArgumentException(sprintf(
+                            'Annotated definer %s must implement %s.',
+                            $className,
+                            DefinerInterface::class,
+                        ));
+                    }
+
                     $definers->insert(
-                        self::createDefiner($className, $collector),
+                        $definer,
                         [
-                            self::priority($attribute),
+                            $attribute->attribute()->priority,
                             -$position,
                         ],
                     );
@@ -61,73 +109,6 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 
     public function __construct(private readonly ContainerInterface $container)
     {
-    }
-
-    /**
-     * @param class-string $className
-     */
-    private static function createDefiner(
-        string                       $className,
-        AnnotationCollectorInterface $collector,
-    ): DefinerInterface
-    {
-        try {
-            $reflection = new ReflectionClass($className);
-        } catch (Throwable $throwable) {
-            throw new InvalidArgumentException(sprintf(
-                'Unable to reflect annotated definer %s.',
-                $className,
-            ), 0, $throwable);
-        }
-
-        if (!$reflection->isInstantiable() || !$reflection->implementsInterface(DefinerInterface::class)) {
-            throw new InvalidArgumentException(sprintf(
-                'Annotated definer %s must be an instantiable implementation of %s.',
-                $className,
-                DefinerInterface::class,
-            ));
-        }
-
-        $constructor = $reflection->getConstructor();
-        $requiredParameters = $constructor?->getNumberOfRequiredParameters() ?? 0;
-
-        if (1 < $requiredParameters) {
-            throw new InvalidArgumentException(sprintf(
-                'Annotated definer %s must have no required constructor parameters or accept '
-                . '%s as its only required bootstrap dependency.',
-                $className,
-                AnnotationCollectorInterface::class,
-            ));
-        }
-
-        try {
-            $definer = 0 === $requiredParameters
-                ? $reflection->newInstance()
-                : $reflection->newInstance($collector);
-        } catch (Throwable $throwable) {
-            throw new InvalidArgumentException(sprintf(
-                'Unable to create annotated definer %s with the available bootstrap dependencies.',
-                $className,
-            ), 0, $throwable);
-        }
-
-        if (!$definer instanceof DefinerInterface) {
-            throw new InvalidArgumentException(sprintf(
-                'Annotated definer %s must implement %s.',
-                $className,
-                DefinerInterface::class,
-            ));
-        }
-
-        return $definer;
-    }
-
-    /**
-     * @param AttributeMetadataInterface<DefinerAttribute> $attribute
-     */
-    private static function priority(AttributeMetadataInterface $attribute): int
-    {
-        return $attribute->attribute()->priority;
     }
 
     public function get(string $id): ?DefinitionInterface
@@ -152,11 +133,4 @@ final class DefinitionFactory implements DefinitionFactoryInterface
 
         return $this->definitions[$id] = null;
     }
-
-    /** @throws ContainerExceptionInterface When the annotation collector cannot be resolved */
-    private function collector(): AnnotationCollectorInterface
-    {
-        return $this->container->get(AnnotationCollectorInterface::class);
-    }
-
 }

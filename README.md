@@ -21,12 +21,13 @@ construction.
 
 Paths below are relative to `src/` and the package namespace.
 
-| Directory | Responsibility |
-| --- | --- |
-| `Property` | `PropertyContext` and `PropertyDispatcher`: one property assignment and Attribute-handler dispatch. |
-| `Storage` | `RetainedEntries`: write-once storage owned by one container. |
-| `Definer / Definition / Resolver / Factory` | Definition discovery, values, resolution, and dispatch construction. |
-| `PropertyHandler / Provider` | Attribute-specific injection and the container bootstrap factory. |
+| Directory                                   | Responsibility                                                                                      |
+|---------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| `Property`                                  | `PropertyContext` and `PropertyDispatcher`: one property assignment and Attribute-handler dispatch. |
+| `Storage`                                   | `RetainedEntries`: write-once storage owned by one container.                                       |
+| `Definer / Definition / Resolver / Factory` | Definition discovery, values, resolution, and dispatch construction.                                |
+| `PropertyHandler / Provider`                | Attribute-specific injection and the container bootstrap factory.                                   |
+| `Diagnostic`                                | `ScanDiagnosticReporter`: bootstrap scan diagnostics logged through the optional stdout logger.     |
 
 Implementation helpers retain an `@internal` boundary; a responsibility namespace does not make them extension points.
 
@@ -110,7 +111,7 @@ phase and reports in the current process after restoring. This is the only mode 
 for scan diagnostics. The distinction uses the existing concrete processor chosen by DI; Scan Isolation's public
 interfaces are unchanged. A future binary restore-only strategy needs an explicit integration decision.
 
-The reporter reads the optional Contract `ScanDiagnosticsInterface` from the existing collector. It does not bind a
+DI bootstrap reads the optional Contract `ScanDiagnosticsInterface` from the existing collector. It does not bind a
 second collector service. The built-in bootstrap requires that capability. Hand-constructed `Container` instances
 have no added logging side effect, and supplying an existing container to `ContainerProvider` still returns it unchanged.
 Explicitly starting another root repeats the lifecycle; no global or cache-backed reported flag is used.
@@ -134,14 +135,14 @@ object. Logger owns timestamps, color, layout, threshold, and transport; DI owns
 
 ### Failures and process streams
 
-| Situation | Result |
-| --- | --- |
-| No logger binding | All diagnostics go to yellow STDERR and bootstrap continues. |
+| Situation                                                   | Result                                                                                                                                |
+|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| No logger binding                                           | All diagnostics go to yellow STDERR and bootstrap continues.                                                                          |
 | Logger construction, dependency resolution, or write throws | All diagnostics fall back to STDERR, then the original error propagates in that process. Partial logging can therefore be duplicated. |
-| Container construction fails after diagnostics restore | The report-owning phase falls back to STDERR and propagates the original error. |
-| Logger deliberately filters records | No fallback; normal return respects the developer's logging policy. |
-| Fallback itself fails | Preserve an existing primary error; without one, propagate the output error. |
-| Application resolution/run fails after reporting | Preserve the existing application boundary; do not report diagnostics again. |
+| Container construction fails after diagnostics restore      | The report-owning phase falls back to STDERR and propagates the original error.                                                       |
+| Logger deliberately filters records                         | No fallback; normal return respects the developer's logging policy.                                                                   |
+| Fallback itself fails                                       | Preserve an existing primary error; without one, propagate the output error.                                                          |
+| Application resolution/run fails after reporting            | Preserve the existing application boundary; do not report diagnostics again.                                                          |
 
 Only DI's direct `NotFoundException` for the `StdoutLoggerInterface` identifier means an absent optional binding.
 `has()` is not used to hide faulty definitions, and a missing dependency of a registered logger remains an error.
@@ -156,12 +157,12 @@ A callback or outer
 handler that explicitly exits 0 can still permit completion; status checking cannot prove normal callback return.
 Restore-only errors occur in the current process and propagate directly to its caller.
 
-| Selected processor | Default logger records ultimately appear on | Emergency fallback ultimately appears on |
-| --- | --- | --- |
-| PCNTL | Parent-visible STDOUT inherited by the child | Inherited STDERR |
-| Process | Parent STDOUT, forwarded separately | Parent STDERR, forwarded separately |
-| Exec | Parent STDERR, because child STDOUT and STDERR are merged | Parent STDERR |
-| Null / Phar | Current-process STDOUT | Current-process STDERR |
+| Selected processor | Default logger records ultimately appear on               | Emergency fallback ultimately appears on |
+|--------------------|-----------------------------------------------------------|------------------------------------------|
+| PCNTL              | Parent-visible STDOUT inherited by the child              | Inherited STDERR                         |
+| Process            | Parent STDOUT, forwarded separately                       | Parent STDERR, forwarded separately      |
+| Exec               | Parent STDERR, because child STDOUT and STDERR are merged | Parent STDERR                            |
+| Null / Phar        | Current-process STDOUT                                    | Current-process STDERR                   |
 
 A replacement writing to STDERR uses STDERR under all strategies; Exec cannot preserve an alternate stdout/stderr
 separation. Log formatting can also depend on the child stream's TTY status. Do not infer the ultimate stream solely

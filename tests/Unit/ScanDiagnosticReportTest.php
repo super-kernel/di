@@ -6,9 +6,8 @@ namespace SuperKernel\Di\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use ReflectionMethod;
 use SuperKernel\Contract\StdoutLoggerInterface;
-use SuperKernel\Di\Provider\ContainerProvider;
+use SuperKernel\Di\Diagnostic\ScanDiagnosticReporter;
 use Throwable;
 
 final class ScanDiagnosticReportTest extends TestCase
@@ -37,8 +36,7 @@ final class ScanDiagnosticReportTest extends TestCase
         );
         $container = $this->createMock(ContainerInterface::class);
         $container->expects(self::once())->method('get')->with(StdoutLoggerInterface::class)->willReturn($logger);
-        $method = new ReflectionMethod(ContainerProvider::class, 'reportDiagnostics');
-        self::assertTrue($method->invoke(null, $container, [
+        self::assertTrue(ScanDiagnosticReporter::report($container, [
             [
             'sequence'       => 1,
             'package'        => 'acme/application',

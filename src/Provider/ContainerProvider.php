@@ -7,7 +7,6 @@ namespace SuperKernel\Di\Provider;
 use LogicException;
 use Psr;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
-use ReflectionException;
 use SuperKernel;
 use SuperKernel\Annotator\AnnotationCollector;
 use SuperKernel\Annotator\Diagnostic\DiagnosticOutput;
@@ -22,10 +21,9 @@ use SuperKernel\Contract\ContainerInterface;
 use SuperKernel\Contract\PackageManagerInterface;
 use SuperKernel\Contract\ReflectorInterface;
 use SuperKernel\Contract\ScanDiagnosticsInterface;
-use SuperKernel\Contract\StdoutLoggerInterface;
 use SuperKernel\Contract\VendorDirInterface;
 use SuperKernel\Di\Container;
-use SuperKernel\Di\Exception\NotFoundException;
+use SuperKernel\Di\Diagnostic\ScanDiagnosticReporter;
 use SuperKernel\Reflector;
 use SuperKernel\Reflector\Provider\ReflectorProvider;
 use SuperKernel\ScanIsolation\Contract\ScannedInterface;
@@ -34,11 +32,6 @@ use SuperKernel\ScanIsolation\Processor\NullScanProcessor;
 use SuperKernel\ScanIsolation\Processor\PhaseScanProcessor;
 use SuperKernel\ScanIsolation\Provider\ScanProcessorProvider;
 use Throwable;
-
-use function count;
-use function ord;
-use function preg_replace_callback;
-use function sprintf;
 
 #[
     FactoryProvider(ContainerInterface::class),
@@ -75,8 +68,19 @@ final readonly class ContainerProvider
         // super-kernel/annotator
         SuperKernel\Annotator\AnnotationCollector::class,
         SuperKernel\Annotator\Cache\AnnotationCache::class,
+        SuperKernel\Annotator\Cache\CacheRecordDecoder::class,
+        SuperKernel\Annotator\Cache\PackageReferenceSnapshot::class,
         SuperKernel\Annotator\Cache\SerializedPackageAnnotations::class,
         SuperKernel\Annotator\Cache\SerializedPackageReferences::class,
+        SuperKernel\Annotator\Cache\Storage\CachePath::class,
+        SuperKernel\Annotator\Cache\Storage\CacheStorage::class,
+        SuperKernel\Annotator\Cache\Storage\PackageRecordPath::class,
+        SuperKernel\Annotator\Cache\Validation\AttributeListValidator::class,
+        SuperKernel\Annotator\Cache\Validation\AttributeMapValidator::class,
+        SuperKernel\Annotator\Cache\Validation\DiagnosticSequenceValidator::class,
+        SuperKernel\Annotator\Cache\Validation\PackageDiagnosticsValidator::class,
+        SuperKernel\Annotator\Cache\Validation\PackageNameValidator::class,
+        SuperKernel\Annotator\Constants\CacheLayout::class,
         SuperKernel\Annotator\Diagnostic\DiagnosticOutput::class,
         SuperKernel\Annotator\Exception\AnnotationCacheException::class,
         SuperKernel\Annotator\Exception\AnnotationCollectorExceptionInterface::class,
@@ -87,7 +91,12 @@ final readonly class ContainerProvider
         SuperKernel\Annotator\Scan\AnnotationScanSession::class,
         SuperKernel\Annotator\Scan\AnnotationScanWorker::class,
         SuperKernel\Annotator\Scan\AnnotationScanner::class,
+        SuperKernel\Annotator\Scan\AttributeMetadataConverter::class,
         SuperKernel\Annotator\Scan\ClassAnnotationScanner::class,
+        SuperKernel\Annotator\Snapshot\AttributeSnapshotDepth::class,
+        SuperKernel\Annotator\Snapshot\AttributeSnapshotGraph::class,
+        SuperKernel\Annotator\Snapshot\AttributeSnapshotRestorer::class,
+        SuperKernel\Annotator\Snapshot\AttributeTypeList::class,
 
         // super-kernel/attribute
         SuperKernel\Attribute\Autowired::class,
@@ -101,8 +110,19 @@ final readonly class ContainerProvider
         SuperKernel\Attribute\Resolver::class,
 
         // super-kernel/composer
+        SuperKernel\Composer\Cache\PackageCachePath::class,
+        SuperKernel\Composer\Cache\PackageCacheStorage::class,
         SuperKernel\Composer\Cache\PackageReconciler::class,
+        SuperKernel\Composer\ClassMap\CandidateDirectoryCollector::class,
+        SuperKernel\Composer\ClassMap\CandidateFileCollector::class,
         SuperKernel\Composer\ClassMap\ClassMapBuilder::class,
+        SuperKernel\Composer\ClassMap\PackageClassScanner::class,
+        SuperKernel\Composer\Constants\AutoloadScope::class,
+        SuperKernel\Composer\Constants\ComposerFile::class,
+        SuperKernel\Composer\Constants\JsonType::class,
+        SuperKernel\Composer\Constants\PackageType::class,
+        SuperKernel\Composer\Constants\ScanRuleKind::class,
+        SuperKernel\Composer\Constants\ScanRuleSource::class,
         SuperKernel\Composer\Contract\ComposerAutoloadInterface::class,
         SuperKernel\Composer\Contract\ComposerJsonInterface::class,
         SuperKernel\Composer\Contract\ComposerLockInterface::class,
@@ -121,10 +141,6 @@ final readonly class ContainerProvider
         SuperKernel\Composer\Detector\NullDetector::class,
         SuperKernel\Composer\Detector\ScriptDetector::class,
         SuperKernel\Composer\Detector\WorkingDirectoryDetector::class,
-        SuperKernel\Composer\Enum\AutoloadScope::class,
-        SuperKernel\Composer\Enum\PackageType::class,
-        SuperKernel\Composer\Enum\ScanRuleKind::class,
-        SuperKernel\Composer\Enum\ScanRuleSource::class,
         SuperKernel\Composer\Exception\AutoloadRuleException::class,
         SuperKernel\Composer\Exception\ClassMapScanException::class,
         SuperKernel\Composer\Exception\ComposerFileException::class,
@@ -136,8 +152,13 @@ final readonly class ContainerProvider
         SuperKernel\Composer\Exception\PackageNotFoundException::class,
         SuperKernel\Composer\Exception\ProjectRootNotFoundException::class,
         SuperKernel\Composer\Locator\PackageLocator::class,
+        SuperKernel\Composer\Manager\AutoloadFileOrder::class,
         SuperKernel\Composer\Manager\PackageManager::class,
         SuperKernel\Composer\Metadata\AutoloadRuleParser::class,
+        SuperKernel\Composer\Metadata\Autoload\AutoloadFileResolver::class,
+        SuperKernel\Composer\Metadata\Autoload\AutoloadPath::class,
+        SuperKernel\Composer\Metadata\Autoload\AutoloadRuleInput::class,
+        SuperKernel\Composer\Metadata\Autoload\ScanRuleCollector::class,
         SuperKernel\Composer\Metadata\ComposerAutoload::class,
         SuperKernel\Composer\Metadata\ComposerFileReader::class,
         SuperKernel\Composer\Metadata\ComposerJson::class,
@@ -146,15 +167,30 @@ final readonly class ContainerProvider
         SuperKernel\Composer\Metadata\ComposerPackage::class,
         SuperKernel\Composer\Metadata\ComposerPackageName::class,
         SuperKernel\Composer\Metadata\PackageParser::class,
+        SuperKernel\Composer\Metadata\Reader\ComposerFileDecoder::class,
+        SuperKernel\Composer\Metadata\Reader\ComposerJsonReader::class,
+        SuperKernel\Composer\Metadata\Reader\ComposerLockReader::class,
+        SuperKernel\Composer\Metadata\Reader\JsonDocumentNormalizer::class,
         SuperKernel\Composer\Metadata\RequirementProcessor::class,
+        SuperKernel\Composer\Metadata\RequirementSectionParser::class,
+        SuperKernel\Composer\Metadata\RuntimePackageFields::class,
+        SuperKernel\Composer\Metadata\Validation\ComposerDocumentValidator::class,
+        SuperKernel\Composer\Metadata\Validation\JsonFieldAssertion::class,
+        SuperKernel\Composer\Metadata\Validation\JsonStructureAssertion::class,
+        SuperKernel\Composer\Metadata\Validation\JsonValueAssertion::class,
         SuperKernel\Composer\Model\Dependency::class,
         SuperKernel\Composer\Model\EnvironmentRequirement::class,
         SuperKernel\Composer\Model\Package::class,
         SuperKernel\Composer\Model\ScanRule::class,
         SuperKernel\Composer\Model\ScanRuleSet::class,
+        SuperKernel\Composer\Path\AbsolutePath::class,
         SuperKernel\Composer\Path\BasePath::class,
+        SuperKernel\Composer\Path\CanonicalDirectory::class,
         SuperKernel\Composer\Path\FilesystemPath::class,
+        SuperKernel\Composer\Path\PathRoot::class,
+        SuperKernel\Composer\Path\TrailingSeparator::class,
         SuperKernel\Composer\Path\VendorDir::class,
+        SuperKernel\Composer\Path\WindowsDriveRoot::class,
         SuperKernel\Composer\Provider\BasePathProvider::class,
         SuperKernel\Composer\Provider\PackageManagerProvider::class,
         SuperKernel\Composer\Provider\VendorDirProvider::class,
@@ -163,6 +199,7 @@ final readonly class ContainerProvider
         SuperKernel\Contract\AnnotationCollectorInterface::class,
         SuperKernel\Contract\ApplicationInterface::class,
         SuperKernel\Contract\AttributeMetadataInterface::class,
+        SuperKernel\Contract\AutoLoaderInterface::class,
         SuperKernel\Contract\BasePathInterface::class,
         SuperKernel\Contract\ConfigInterface::class,
         SuperKernel\Contract\ContainerInterface::class,
@@ -170,6 +207,7 @@ final readonly class ContainerProvider
         SuperKernel\Contract\EventInterface::class,
         SuperKernel\Contract\ExceptionDispatcherInterface::class,
         SuperKernel\Contract\ListenerInterface::class,
+        SuperKernel\Contract\MultipleConfigInterface::class,
         SuperKernel\Contract\PackageAnnotationsInterface::class,
         SuperKernel\Contract\PackageManagerInterface::class,
         SuperKernel\Contract\PackageMetadataInterface::class,
@@ -177,6 +215,7 @@ final readonly class ContainerProvider
         SuperKernel\Contract\PropertyContextInterface::class,
         SuperKernel\Contract\ReflectorInterface::class,
         SuperKernel\Contract\ScanDiagnosticsInterface::class,
+        SuperKernel\Contract\SingleConfigInterface::class,
         SuperKernel\Contract\StdoutLoggerInterface::class,
         SuperKernel\Contract\VendorDirInterface::class,
 
@@ -191,34 +230,42 @@ final readonly class ContainerProvider
         SuperKernel\Di\Contract\RetainedEntriesInterface::class,
         SuperKernel\Di\Definer\ClassDefiner::class,
         SuperKernel\Di\Definer\FactoryDefiner::class,
+        SuperKernel\Di\Definer\InstantiableClass::class,
         SuperKernel\Di\Definer\ProviderDefiner::class,
         SuperKernel\Di\Definition\ClassDefinition::class,
         SuperKernel\Di\Definition\FactoryDefinition::class,
         SuperKernel\Di\Definition\MethodDefinition::class,
         SuperKernel\Di\Definition\PropertyDefinition::class,
         SuperKernel\Di\Definition\ProviderDefinition::class,
+        SuperKernel\Di\Diagnostic\ScanDiagnosticReporter::class,
         SuperKernel\Di\Exception\ContainerException::class,
         SuperKernel\Di\Exception\NotFoundException::class,
         SuperKernel\Di\Exception\ResolutionException::class,
         SuperKernel\Di\Factory\DefinitionFactory::class,
+        SuperKernel\Di\Factory\ReservedCollector::class,
         SuperKernel\Di\Factory\ResolverFactory::class,
+        SuperKernel\Di\PropertyHandler\AutowiredPropertyHandler::class,
+        SuperKernel\Di\PropertyHandler\NativeLazyProxy::class,
         SuperKernel\Di\Property\PropertyContext::class,
         SuperKernel\Di\Property\PropertyDispatcher::class,
-        SuperKernel\Di\Storage\RetainedEntries::class,
-        SuperKernel\Di\PropertyHandler\AutowiredPropertyHandler::class,
         SuperKernel\Di\Provider\ContainerProvider::class,
         SuperKernel\Di\Resolver\ClassResolver::class,
         SuperKernel\Di\Resolver\FactoryResolver::class,
         SuperKernel\Di\Resolver\MethodResolver::class,
         SuperKernel\Di\Resolver\PropertyResolver::class,
         SuperKernel\Di\Resolver\ProviderResolver::class,
+        SuperKernel\Di\Storage\RetainedEntries::class,
 
         // super-kernel/reflector
+        SuperKernel\Reflector\Cache\ClassReflectionCache::class,
+        SuperKernel\Reflector\Cache\EnumReflectionCache::class,
+        SuperKernel\Reflector\Cache\SymbolKey::class,
         SuperKernel\Reflector\Facade\ReflectorFacade::class,
         SuperKernel\Reflector\Provider\ReflectorProvider::class,
         SuperKernel\Reflector\Reflector::class,
 
         // super-kernel/scan-isolation
+        SuperKernel\ScanIsolation\Constants\ReentryDescriptor::class,
         SuperKernel\ScanIsolation\Contract\ScanProcessorInterface::class,
         SuperKernel\ScanIsolation\Contract\ScannedInterface::class,
         SuperKernel\ScanIsolation\Exception\InvalidScanCallbackException::class,
@@ -227,9 +274,10 @@ final readonly class ContainerProvider
         SuperKernel\ScanIsolation\Exception\ScanProcessorUnavailableException::class,
         SuperKernel\ScanIsolation\Execution\Callback::class,
         SuperKernel\ScanIsolation\Execution\CallbackRunner::class,
-        SuperKernel\ScanIsolation\Process\EntryPoint::class,
-        SuperKernel\ScanIsolation\Process\ReentryContext::class,
         SuperKernel\ScanIsolation\Execution\Scanned::class,
+        SuperKernel\ScanIsolation\Process\EntryPoint::class,
+        SuperKernel\ScanIsolation\Process\EntryPointProbe::class,
+        SuperKernel\ScanIsolation\Process\ReentryContext::class,
         SuperKernel\ScanIsolation\Processor\ExecScanProcessor::class,
         SuperKernel\ScanIsolation\Processor\NullScanProcessor::class,
         SuperKernel\ScanIsolation\Processor\PcntlScanProcessor::class,
@@ -268,7 +316,22 @@ final readonly class ContainerProvider
     {
         $reflector = new ReflectorProvider()();
         $phase = new PhaseScanProcessor($scanned);
-        $temporary = new Container(self::collector($reflector), [
+        $scanner = new ClassAnnotationScanner($reflector);
+        $classes = [];
+        $methods = [];
+        $properties = [];
+
+        foreach (self::CLASS_NAMES as $class) {
+            $record = $scanner->collect($reflector->reflectClass($class));
+            $classes += $record['classes'];
+            $methods += $record['methods'];
+            $properties += $record['properties'];
+        }
+
+        $bootstrapCollector = new AnnotationCollector([
+            new PackageAnnotations('super-kernel/di', null, $classes, $methods, $properties),
+        ]);
+        $temporary = new Container($bootstrapCollector, [
             ReflectorInterface::class     => $reflector,
             Reflector\Reflector::class    => $reflector,
             ScanProcessorInterface::class => $phase,
@@ -306,7 +369,7 @@ final readonly class ContainerProvider
             }
 
             $container = new Container($collector, $entries);
-            $reported = self::reportDiagnostics($container, $diagnostics);
+            $reported = ScanDiagnosticReporter::report($container, $diagnostics);
         } catch (Throwable $exception) {
             try {
                 DiagnosticOutput::writeToStderr($diagnostics);
@@ -322,92 +385,5 @@ final readonly class ContainerProvider
         }
 
         return $scanned->isScanned() ? $container : null;
-    }
-
-    /**
-     * @param list<array{
-     *     sequence: int, package: string, class: string, exception_type: string, message: string
-     * }> $diagnostics
-     *
-     * @return bool Whether the batch was handed to a logger (or was empty); false requests emergency fallback
-     *
-     * @throws Throwable When the configured logger cannot be resolved or cannot accept a record
-     */
-    private static function reportDiagnostics(PsrContainerInterface $container, array $diagnostics): bool
-    {
-        if ([] === $diagnostics) {
-            return true;
-        }
-
-        try {
-            $logger = $container->get(StdoutLoggerInterface::class);
-        } catch (NotFoundException $exception) {
-            if (StdoutLoggerInterface::class !== $exception->identifier()) {
-                throw $exception;
-            }
-
-            return false;
-        }
-
-        $count = count($diagnostics);
-        $logger->warning(
-            1 === $count ? 'Annotation scan skipped 1 class.' : sprintf('Annotation scan skipped %d classes.', $count),
-            [
-                'event'             => 'annotation_scan.skipped_summary',
-                'skipped_count'     => $count,
-                'diagnostic_source' => 'annotation_cache',
-            ],
-        );
-
-        foreach ($diagnostics as $diagnostic) {
-            $logger->info(sprintf(
-                'Annotation scan skipped %s: %s: %s',
-                self::displayDiagnostic($diagnostic['class']),
-                self::displayDiagnostic($diagnostic['exception_type']),
-                self::displayDiagnostic($diagnostic['message']),
-            ), [
-                'event'             => 'annotation_scan.skipped_class',
-                'diagnostic_source' => 'annotation_cache',
-                'sequence'          => $diagnostic['sequence'],
-                'package'           => $diagnostic['package'],
-                'class'             => $diagnostic['class'],
-                'exception_type'    => $diagnostic['exception_type'],
-                'exception_message' => $diagnostic['message'],
-            ]);
-        }
-
-        return true;
-    }
-
-    private static function displayDiagnostic(string $value): string
-    {
-        return preg_replace_callback('/[\x00-\x1f\x7f]/', static fn(array $match): string => match ($match[0]) {
-            "\n"    => '\\n',
-            "\r"    => '\\r',
-            "\t"    => '\\t',
-            default => sprintf('\\x%02X', ord($match[0])),
-        }, $value);
-    }
-
-    /**
-     * @throws ReflectionException When a bootstrap class or attribute type cannot be reflected
-     */
-    private static function collector(ReflectorInterface $reflector): AnnotationCollectorInterface
-    {
-        $scanner = new ClassAnnotationScanner($reflector);
-        $classes = [];
-        $methods = [];
-        $properties = [];
-
-        foreach (self::CLASS_NAMES as $class) {
-            $record = $scanner->collect($reflector->reflectClass($class));
-            $classes += $record['classes'];
-            $methods += $record['methods'];
-            $properties += $record['properties'];
-        }
-
-        return new AnnotationCollector([
-            new PackageAnnotations('super-kernel/di', null, $classes, $methods, $properties),
-        ]);
     }
 }

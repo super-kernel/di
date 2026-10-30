@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Resolver;
 
 use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
-use ReflectionMethod;
 use ReflectionNamedType;
-use ReflectionParameter;
-use ReflectionType;
 use ReflectionUnionType;
 use SuperKernel\Attribute\Resolver;
 use SuperKernel\Contract\ContainerInterface;
@@ -53,7 +49,17 @@ final readonly class MethodResolver implements ResolverInterface
 
         try {
             $class = new ReflectionClass($definition->className);
-            $method = $this->method($class, $definition);
+
+            if ('__construct' === $definition->methodName) {
+                $method = $class->getConstructor();
+            } elseif ($class->hasMethod($definition->methodName)) {
+                $method = $class->getMethod($definition->methodName);
+            } else {
+                throw ResolutionException::methodNotFound(
+                    $class->getName(),
+                    $definition->methodName,
+                );
+            }
         } catch (ContainerExceptionInterface $exception) {
             throw $exception;
         } catch (Throwable $throwable) {
@@ -83,149 +89,87 @@ final readonly class MethodResolver implements ResolverInterface
                 );
             }
 
-            $arguments[] = $this->resolveParameter($definition, $class, $method, $parameter);
-        }
+            if (array_key_exists($parameter->getName(), $definition->parameters)) {
+                $arguments[] = $definition->parameters[$parameter->getName()];
 
-        return $arguments;
-    }
-
-    /**
-     * @param ReflectionClass<object> $class
-     */
-    private function method(
-        ReflectionClass  $class,
-        MethodDefinition $definition,
-    ): ?ReflectionMethod
-    {
-        if ('__construct' === $definition->methodName) {
-            return $class->getConstructor();
-        }
-
-        if (!$class->hasMethod($definition->methodName)) {
-            throw ResolutionException::methodNotFound(
-                $class->getName(),
-                $definition->methodName,
-            );
-        }
-
-        return $class->getMethod($definition->methodName);
-    }
-
-    /**
-     * @param ReflectionClass<object> $class
-     *
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     */
-    private function resolveParameter(
-        MethodDefinition    $definition,
-        ReflectionClass     $class,
-        ReflectionMethod    $method,
-        ReflectionParameter $parameter,
-    ): mixed
-    {
-        if (array_key_exists($parameter->getName(), $definition->parameters)) {
-            return $definition->parameters[$parameter->getName()];
-        }
-
-        if (array_key_exists($parameter->getPosition(), $definition->parameters)) {
-            return $definition->parameters[$parameter->getPosition()];
-        }
-
-        $type = $parameter->getType();
-        $candidates = $this->dependencyNames($class, $type);
-
-        $available = [];
-
-        foreach ($candidates as $candidate) {
-            if ($this->container->has($candidate)) {
-                $available[] = $candidate;
-            }
-        }
-
-        $availableCount = count($available);
-
-        if (1 === $availableCount) {
-            return $this->container->get($available[0]);
-        }
-
-        if (1 < $availableCount) {
-            throw ResolutionException::ambiguousParameter(
-                $class->getName(),
-                $method->getName(),
-                $parameter->getName(),
-                $available,
-            );
-        }
-
-        if ($parameter->isDefaultValueAvailable()) {
-            return $parameter->getDefaultValue();
-        }
-
-        if (true === $type?->allowsNull()) {
-            return null;
-        }
-
-        throw ResolutionException::unresolvableParameter(
-            $class->getName(),
-            $method->getName(),
-            $parameter->getName(),
-            null === $type ? null : (string)$type,
-        );
-    }
-
-    /**
-     * @param ReflectionClass<object> $class
-     *
-     * @return list<class-string>
-     */
-    private function dependencyNames(ReflectionClass $class, ?ReflectionType $type): array
-    {
-        if ($type instanceof ReflectionNamedType) {
-            $candidate = $this->dependencyName($class, $type);
-
-            return null === $candidate ? [] : [
-                $candidate,
-            ];
-        }
-
-        if (!$type instanceof ReflectionUnionType) {
-            return [];
-        }
-
-        $candidates = [];
-
-        foreach ($type->getTypes() as $unionType) {
-            if (!$unionType instanceof ReflectionNamedType) {
                 continue;
             }
 
-            $candidate = $this->dependencyName($class, $unionType);
+            if (array_key_exists($parameter->getPosition(), $definition->parameters)) {
+                $arguments[] = $definition->parameters[$parameter->getPosition()];
 
-            if (null !== $candidate) {
-                $candidates[] = $candidate;
+                continue;
             }
+
+            $type = $parameter->getType();
+            $memberTypes = $type instanceof ReflectionUnionType ? $type->getTypes() : [
+                $type,
+            ];
+            $candidates = [];
+
+            foreach ($memberTypes as $memberType) {
+                if (!$memberType instanceof ReflectionNamedType || $memberType->isBuiltin()) {
+                    continue;
+                }
+
+                $candidate = match ($memberType->getName()) {
+                    'self',
+                    'static' => $class->getName(),
+                    'parent' => $class->getParentClass()?->getName() ?: null,
+                    default  => $memberType->getName(),
+                };
+
+                if (null !== $candidate) {
+                    $candidates[] = $candidate;
+                }
+            }
+
+            $candidates = array_values(array_unique($candidates));
+            $available = [];
+
+            foreach ($candidates as $candidate) {
+                if ($this->container->has($candidate)) {
+                    $available[] = $candidate;
+                }
+            }
+
+            $availableCount = count($available);
+
+            if (1 === $availableCount) {
+                $arguments[] = $this->container->get($available[0]);
+
+                continue;
+            }
+
+            if (1 < $availableCount) {
+                throw ResolutionException::ambiguousParameter(
+                    $class->getName(),
+                    $method->getName(),
+                    $parameter->getName(),
+                    $available,
+                );
+            }
+
+            if ($parameter->isDefaultValueAvailable()) {
+                $arguments[] = $parameter->getDefaultValue();
+
+                continue;
+            }
+
+            if (true === $type?->allowsNull()) {
+                $arguments[] = null;
+
+                continue;
+            }
+
+            throw ResolutionException::unresolvableParameter(
+                $class->getName(),
+                $method->getName(),
+                $parameter->getName(),
+                null === $type ? null : (string)$type,
+            );
         }
 
-        return array_values(array_unique($candidates));
-    }
-
-    /**
-     * @param ReflectionClass<object> $class
-     *
-     * @return class-string|null
-     */
-    private function dependencyName(ReflectionClass $class, ReflectionNamedType $type): ?string
-    {
-        if ($type->isBuiltin()) {
-            return null;
-        }
-
-        return match ($type->getName()) {
-            'self',
-            'static' => $class->getName(),
-            'parent' => $class->getParentClass()?->getName() ?: null,
-            default  => $type->getName(),
-        };
+        return $arguments;
     }
 }
