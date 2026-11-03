@@ -112,6 +112,7 @@ final readonly class ContainerProvider
         // super-kernel/composer
         SuperKernel\Composer\Cache\PackageCachePath::class,
         SuperKernel\Composer\Cache\PackageCacheStorage::class,
+        SuperKernel\Composer\Cache\PackageLocation::class,
         SuperKernel\Composer\Cache\PackageReconciler::class,
         SuperKernel\Composer\ClassMap\CandidateDirectoryCollector::class,
         SuperKernel\Composer\ClassMap\CandidateFileCollector::class,
@@ -188,6 +189,7 @@ final readonly class ContainerProvider
         SuperKernel\Composer\Path\CanonicalDirectory::class,
         SuperKernel\Composer\Path\FilesystemPath::class,
         SuperKernel\Composer\Path\PathRoot::class,
+        SuperKernel\Composer\Path\RelativePath::class,
         SuperKernel\Composer\Path\TrailingSeparator::class,
         SuperKernel\Composer\Path\VendorDir::class,
         SuperKernel\Composer\Path\WindowsDriveRoot::class,
