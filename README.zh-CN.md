@@ -158,9 +158,9 @@ $container = new Container($annotationCollector);
 
 `new Container($annotationCollector, $entries)` 还会保留传入的服务，包括非类标识和 null 值；类和接口标识必须对应兼容的实例。
 
-`SuperKernel\Di\Provider\ContainerProvider` 是两个容器接口的工厂提供者。传入容器调用时，它原样返回该容器。不传容器调用时，它通过 `super-kernel/scan-isolation` 在隔离进程中扫描应用，恢复已发布的 Composer 缓存和注解缓存，并返回一个新的根容器。Process 和 Exec 策略会重新运行当前的 PHP 脚本。仅恢复的执行方式（包括 Phar）需要用部署的代码通过一次正常扫描生成缓存；缓存缺失或不兼容时会直接失败，不会隐式扫描。
+`SuperKernel\Di\Provider\ContainerProvider` 是两个容器接口的工厂提供者。传入容器调用时，它原样返回该容器。不传容器调用时，它通过 `super-kernel/metadata` 和 `super-kernel/annotator` 恢复 `skernel build` 生成的包元数据和注解记录，并返回一个新的根容器。它从不扫描源码，也不读取 Composer 文件，因此请在安装依赖之后、以及修改自动加载规则或带注解的类之后运行 `skernel build`，或者使用会先构建的 `skernel run` 启动应用。产物缺失、无效或过期时会抛出 `SuperKernel\Metadata\Exception\BuildRequiredException`，其消息以 ``Run `skernel build` to generate the project metadata.`` 结尾。同样的恢复在项目移动后以及 Phar 内都能工作。被跳过的类的诊断由 `skernel build` 输出，而不是在启动时输出。
 
-启动后的根容器还会以接口和具体类为标识保留以下服务：`SuperKernel\Contract` 中的 `AnnotationCollectorInterface`、`BasePathInterface`、`PackageManagerInterface`、`ReflectorInterface` 和 `VendorDirInterface`，以及 `SuperKernel\Composer\Contract\ComposerMetadataInterface` 和 `SuperKernel\ScanIsolation\Contract\ScanProcessorInterface`。需要依赖目录时注入 `VendorDirInterface`；`PackageManagerInterface` 不提供它。
+启动后的根容器还会以接口和具体类为标识保留以下服务：`SuperKernel\Contract` 中的 `AnnotationCollectorInterface`、`BasePathInterface`、`PackageManagerInterface`、`ReflectorInterface` 和 `VendorDirInterface`。需要依赖目录时注入 `VendorDirInterface`；`PackageManagerInterface` 不提供它。
 
 ## 查找与错误
 
@@ -190,32 +190,3 @@ $callerOwnedService = $resolverFactory->resolve($definition);
 ```
 
 这不是瞬态作用域：解析过程中请求的依赖仍来自共享容器，并可能被保留在其中。
-
-## 扫描诊断
-
-注解扫描跳过某些类时，启动过程会通过容器的 `StdoutLoggerInterface` 记录结果：
-
-```text
-Annotation scan skipped 1 class.
-Annotation scan skipped %d classes.
-Annotation scan skipped %s: %s: %s
-```
-
-前两条是 WARNING 级别的汇总；最后一条是每个被跳过的类各一条 INFO 记录，按捕获顺序输出，包含类名、异常类型和消息。ASCII 控制字节只在消息文本中转义。
-
-- 汇总的 context：`event=annotation_scan.skipped_summary`、`skipped_count` 和 `diagnostic_source=annotation_cache`。
-- 明细的 context：`event=annotation_scan.skipped_class`、`diagnostic_source`、`sequence`、`package`、`class`、`exception_type`，以及原始的 `exception_message`。
-
-每个根容器只写一次报告：在执行扫描的子进程中写，或者在仅恢复的执行方式下由当前进程写。
-
-| 扫描处理器  | 默认日志输出              | STDERR 回退     |
-|-------------|---------------------------|-----------------|
-| PCNTL       | 继承的 STDOUT             | 继承的 STDERR   |
-| Process     | 父进程 STDOUT             | 父进程 STDERR   |
-| Exec        | 父进程 STDERR（合并输出） | 父进程 STDERR   |
-| Null / Phar | 当前进程 STDOUT           | 当前进程 STDERR |
-
-- 没有绑定日志器时，报告以黄色写到 STDERR，启动继续。
-- 如果日志器或它的某个依赖构造失败，或者写入失败，完整的报告会写到 STDERR，原始错误向外传播，启动停止；失败之前已写出的内容可能重复出现。
-- 日志器的级别过滤会被遵守，不做回退。如果只想显示汇总，或者为了机器可读的输出保持 STDOUT 干净，请绑定一个阈值为 WARNING、或使用 STDERR 或文件处理器的应用日志器；参见 [Logger README](https://github.com/super-kernel/logger/blob/main/README.md#scan-diagnostics)。该日志器也会收到其他框架记录。DI 没有为这份报告提供详细程度开关或环境变量设置。
-- 自定义日志器在执行扫描的子进程中构造。它的构造函数必须使用注入的服务，不得调用 `ApplicationContext::getContainer()`，也不得依赖应用启动。带缓冲或异步的传输必须考虑子进程会终止：PSR-3 调用正常返回只表示已接受，不表示已持久送达。

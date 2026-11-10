@@ -13,11 +13,8 @@ use ReflectionProperty;
 use SuperKernel\Annotator\Model\AttributeMetadata;
 use SuperKernel\Attribute\FactoryProvider;
 use SuperKernel\Contract\AnnotationCollectorInterface;
-use SuperKernel\Contract\BasePathInterface;
 use SuperKernel\Contract\ContainerInterface;
-use SuperKernel\Contract\PackageManagerInterface;
 use SuperKernel\Contract\ReflectorInterface;
-use SuperKernel\Contract\VendorDirInterface;
 use SuperKernel\Di\Container;
 use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\ResolverFactoryInterface;
@@ -76,36 +73,6 @@ final class ContainerProviderTest extends TestCase
 
         $this->assertSame($container, $provider($container));
         $this->assertSame($container, $provider($container));
-    }
-
-    /** @throws Throwable When fixture setup or the operation under test throws */
-    public function testContainerProviderCreatesTheFirstRoot(): void
-    {
-        $container = new ContainerProvider()();
-
-        $this->assertInstanceOf(Container::class, $container);
-        $this->assertSame($container, $container->get(ContainerInterface::class));
-        $this->assertSame($container, $container->get(PsrContainerInterface::class));
-        $this->assertInstanceOf(
-            AnnotationCollectorInterface::class,
-            $container->get(AnnotationCollectorInterface::class),
-        );
-        $this->assertInstanceOf(BasePathInterface::class, $container->get(BasePathInterface::class));
-        $reflector = $container->get(ReflectorInterface::class);
-        $this->assertInstanceOf(Reflector::class, $reflector);
-        $this->assertSame($reflector, $container->get(Reflector::class));
-        $this->assertSame($reflector, new ReflectionProperty(ReflectorFacade::class, 'reflector')->getValue());
-        $this->assertInstanceOf(ReflectorProvider::class, $container->get(ReflectorProvider::class));
-        $vendorDir = $container->get(VendorDirInterface::class);
-        $this->assertInstanceOf(VendorDirInterface::class, $vendorDir);
-        $this->assertSame($vendorDir, $container->get(VendorDirInterface::class));
-        $this->assertDirectoryExists($vendorDir . '/.cache/classes');
-        $this->assertDirectoryExists($vendorDir . '/.cache/annotations');
-        $this->assertFileExists($vendorDir . '/.cache/packages.ser');
-        $this->assertInstanceOf(
-            PackageManagerInterface::class,
-            $container->get(PackageManagerInterface::class),
-        );
     }
 
     /** @throws Throwable When fixture setup or the operation under test throws */

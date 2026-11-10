@@ -159,9 +159,9 @@ Every container reserves these entries, which take precedence over supplied ones
 
 `new Container($annotationCollector, $entries)` also retains supplied services, including non-class identifiers and null values; class and interface identifiers must hold compatible instances.
 
-`SuperKernel\Di\Provider\ContainerProvider` is the factory provider for both container interfaces. Invoked with a container, it returns that container unchanged. Invoked without one, it scans the application in an isolated process through `super-kernel/scan-isolation`, restores the published Composer and annotation caches, and returns a new root. The Process and Exec strategies re-run the current PHP script. Restore-only execution, including Phar, requires caches built by a normal scan with the deployed code; missing or incompatible caches fail without an implicit scan.
+`SuperKernel\Di\Provider\ContainerProvider` is the factory provider for both container interfaces. Invoked with a container, it returns that container unchanged. Invoked without one, it restores the package metadata and annotation records that `skernel build` generated, through `super-kernel/metadata` and `super-kernel/annotator`, and returns a new root. It never scans sources or reads Composer files, so run `skernel build` after installing dependencies and after changing autoload rules or annotated classes, or start the application with `skernel run`, which builds first. Missing, invalid, or out-of-date artifacts raise `SuperKernel\Metadata\Exception\BuildRequiredException`, whose message ends with ``Run `skernel build` to generate the project metadata.`` The same restoration works from a moved project and inside a Phar. Skipped-class diagnostics are printed by `skernel build`, not at startup.
 
-A bootstrapped root also retains these services under their interfaces and concrete classes: `AnnotationCollectorInterface`, `BasePathInterface`, `PackageManagerInterface`, `ReflectorInterface`, and `VendorDirInterface` from `SuperKernel\Contract`, `SuperKernel\Composer\Contract\ComposerMetadataInterface`, and `SuperKernel\ScanIsolation\Contract\ScanProcessorInterface`. Inject `VendorDirInterface` for the dependency directory; `PackageManagerInterface` does not expose it.
+A bootstrapped root also retains these services under their interfaces and concrete classes: `AnnotationCollectorInterface`, `BasePathInterface`, `PackageManagerInterface`, `ReflectorInterface`, and `VendorDirInterface` from `SuperKernel\Contract`. Inject `VendorDirInterface` for the dependency directory; `PackageManagerInterface` does not expose it.
 
 ## Lookups and errors
 
@@ -191,32 +191,3 @@ $callerOwnedService = $resolverFactory->resolve($definition);
 ```
 
 This is not a transient scope: dependencies requested during that resolution still come from the shared container and may be retained there.
-
-## Scan diagnostics
-
-When the annotation scan skips classes, bootstrap logs the result through the container's `StdoutLoggerInterface`:
-
-```text
-Annotation scan skipped 1 class.
-Annotation scan skipped %d classes.
-Annotation scan skipped %s: %s: %s
-```
-
-The first two are WARNING summaries; the last is one INFO record per skipped class, in captured order, with the class, exception type, and message. ASCII control bytes are escaped in the message text only.
-
-- Summary context: `event=annotation_scan.skipped_summary`, `skipped_count`, and `diagnostic_source=annotation_cache`.
-- Detail context: `event=annotation_scan.skipped_class`, `diagnostic_source`, `sequence`, `package`, `class`, `exception_type`, and the raw `exception_message`.
-
-The report is written once per root: in the scanning child, or in the current process for restore-only execution.
-
-| Scan processor | Default logger output  | STDERR fallback  |
-|----------------|------------------------|------------------|
-| PCNTL          | Inherited STDOUT       | Inherited STDERR |
-| Process        | Parent STDOUT          | Parent STDERR    |
-| Exec           | Parent STDERR (merged) | Parent STDERR    |
-| Null / Phar    | Current-process STDOUT | Current STDERR   |
-
-- Without a logger binding, the report goes to STDERR in yellow and startup continues.
-- If the logger or one of its dependencies fails to construct, or a write fails, the complete report goes to STDERR, the original error propagates, and startup stops; output written before the failure may repeat.
-- Logger level filtering is respected without a fallback. To show only summaries or keep STDOUT clean for machine-readable output, bind an application logger with a WARNING threshold or a STDERR or file handler; see [the Logger README](https://github.com/super-kernel/logger/blob/main/README.md#scan-diagnostics). That logger also receives other framework records. DI has no verbosity flag or environment setting for this report.
-- A custom logger is constructed in the scanning child. Its constructor must use injected services, must not call `ApplicationContext::getContainer()`, and must not depend on application startup. Buffered or asynchronous transports must account for the child's termination: a normal PSR-3 return means acceptance, not durable delivery.
