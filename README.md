@@ -4,190 +4,131 @@
 
 # SuperKernel DI
 
-`super-kernel/di` is the PSR-11 shared-service container for SuperKernel and provides `psr/container-implementation` 2.0. Services are declared with native PHP Attributes from `super-kernel/attribute`, resolved on first lookup, and retained for the life of the container.
+`super-kernel/di` is the PSR-11 container of SuperKernel: it builds the services that classes declare with Attributes, injects their dependencies, and shares each one for the life of the container.
 
-The container offers:
+## Installation
 
-- interface mappings and factory providers declared with Attributes;
-- constructor, method, and property injection, with lazy property references by default;
-- custom property Attributes, definers, and resolvers as extension points;
-- caller-owned resolution outside container retention.
+```bash
+composer require super-kernel/di
+```
 
-It does not provide child containers, mutable registrations, transient scope, compiled containers, circular-dependency detection, or single-flight construction.
+The package provides `psr/container-implementation` 2.0. The container reads the metadata that `skernel build` generates, so a project needs SKERNEL to build it.
 
-## Registering services
+## What it provides
+
+- Services declared with the `#[Provider]` and `#[FactoryProvider]` Attributes, created on first lookup and then shared.
+- Constructor and factory injection by class or interface type, without configuration.
+- Property injection with `#[Autowired]`, as lazy references by default.
+- Custom property Attributes, definers, and resolvers as extension points.
+- The root container restored from the metadata of `skernel build`, without scanning at start.
+- Resolution of a new object outside the container's sharing when the caller owns it.
+
+It does not provide:
+
+- child containers, scopes, or per-request lifetimes;
+- registration or replacement of entries at run time;
+- a compiled container;
+- detection of circular dependencies;
+- protection against two coroutines creating the same entry at once.
+
+## Quick start
+
+Declare an interface and the class that provides it. Save the interface as `src/Greeting/Greeter.php`:
 
 ```php
-use DateTimeImmutable;
-use DateTimeZone;
-use SuperKernel\Attribute\FactoryProvider;
+<?php
+
+declare(strict_types=1);
+
+namespace Src\Greeting;
+
+interface Greeter
+{
+    public function greet(string $name): string;
+}
+```
+
+Save the class as `src/Greeting/EnglishGreeter.php`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Src\Greeting;
+
 use SuperKernel\Attribute\Provider;
 
-interface ClockInterface
+#[Provider(Greeter::class)]
+final class EnglishGreeter implements Greeter
 {
-    public function now(): DateTimeImmutable;
-}
-
-#[Provider(ClockInterface::class)]
-final class SystemClock implements ClockInterface
-{
-    public function now(): DateTimeImmutable
+    public function greet(string $name): string
     {
-        return new DateTimeImmutable();
-    }
-}
-
-#[FactoryProvider(DateTimeZone::class)]
-final class TimeZoneProvider
-{
-    public function __invoke(): DateTimeZone
-    {
-        return new DateTimeZone('UTC');
+        return "Hello, {$name}!";
     }
 }
 ```
 
-- `#[Provider(Target::class)]` on an instantiable class maps `Target` to it. Mapping a class to itself registers it as a shared class. Mappings may chain, as in `interface -> interface -> concrete`, and every identifier in the chain retains the same instance. Self mappings on interfaces, abstract classes, or classes without public construction are rejected, as are incompatible and duplicate mappings.
-- `#[FactoryProvider(Target::class)]` is repeatable. The factory provider must be instantiable, have no constructor or a public one, and declare its own public, non-static `__invoke()`, whose parameters are injected when it is called. Use it for custom construction, validation, or initialization; use `Provider` when normal construction suffices.
-- Any other instantiable class is constructed directly when requested.
-
-## Constructor and method injection
-
-Each constructor or method parameter receives, in order:
-
-1. a value supplied through `MethodDefinition`, matched by parameter name and then by position;
-2. the container entry for its unique class or interface type;
-3. its declared default value;
-4. `null` when it is nullable.
-
-Variadic parameters are omitted. By-reference parameters, ambiguous union types, and required parameters that none of these sources can satisfy are rejected.
-
-## Property injection
+Restore the container and look the service up. Save the script as `bin/greet.php`:
 
 ```php
-use SuperKernel\Attribute\Autowired;
+<?php
 
-final class ReportService
-{
-    #[Autowired]
-    private ClockInterface $clock;
+declare(strict_types=1);
 
-    public function generatedAt(): string
-    {
-        return $this->clock->now()->format(DATE_ATOM);
-    }
-}
+use Src\Greeting\Greeter;
+use SuperKernel\Di\Provider\ContainerProvider;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$container = new ContainerProvider()();
+
+echo $container->get(Greeter::class)->greet('SuperKernel'), PHP_EOL;
 ```
 
-An `#[Autowired]` property is resolved in this order:
+Build the project and run the script:
 
-1. a non-null `Autowired::$identifier`;
-2. the one existing non-built-in class or interface in its type;
-3. its declared default value;
-4. otherwise, a property-resolution error.
-
-Properties are assigned after the constructor returns, so a constructor cannot use them. Once an identifier exists, an unavailable entry is an error; the default is not used as a fallback. Public, protected, private, and uninitialized readonly properties are supported; static properties are rejected. `#[Autowired]` on a method is metadata only, and the container never calls that method.
-
-Supported properties receive a PHP 8.4 lazy proxy: the entry is resolved through `Container::get()` the first time the proxy's state is read or written, and a failed initialization can be retried. The proxy is not identical (`===`) to the canonical entry. An interface or abstract identifier is proxied only through a `Provider` mapping to a concrete class. Ordinary lookup is used instead for `FactoryProvider`-only identifiers, internal classes other than `stdClass` and their subclasses, and classes without stored instance properties. Lazy initialization is synchronous and has no single-flight guard.
-
-## Custom property Attributes
-
-A package can map its own property Attribute to a handler without depending on this package:
-
-```php
-use Attribute;
-use SuperKernel\Attribute\PropertyHandler;
-use SuperKernel\Contract\ContainerInterface;
-use SuperKernel\Contract\PropertyAttributeHandlerInterface;
-use SuperKernel\Contract\PropertyContextInterface;
-
-#[Attribute(Attribute::TARGET_PROPERTY)]
-final readonly class FromEnv
-{
-    public function __construct(public string $name)
-    {
-    }
-}
-
-#[PropertyHandler(FromEnv::class)]
-final readonly class FromEnvPropertyHandler implements PropertyAttributeHandlerInterface
-{
-    public function __construct(private ContainerInterface $container)
-    {
-    }
-
-    public function handle(PropertyContextInterface $context, object $attribute): void
-    {
-        assert($attribute instanceof FromEnv);
-
-        $value = getenv($attribute->name);
-
-        if ($value !== false) {
-            $context->assign($value);
-        }
-    }
-}
+```bash
+skernel build
+php bin/greet.php
 ```
 
-- `#[PropertyHandler(TheAttribute::class)]` is repeatable, so one handler may serve several Attributes; each Attribute has at most one handler. Non-instantiable handlers, non-Attribute targets, targets without `Attribute::TARGET_PROPERTY`, and duplicate mappings are rejected.
-- Every handler receives the root container through its constructor. Mapped Attributes are handled in declaration order; property Attributes without a handler are ignored.
-- Not calling `assign()` leaves the property untouched, `assign(null)` assigns null, and a second assignment to the same property fails.
+It prints `Hello, SuperKernel!`.
 
-## Definers and resolvers
+## Public surface
 
-The container turns an identifier into a definition with the first supporting definer, then resolves the definition with the first supporting resolver. Higher priorities run first and equal priorities keep discovery order.
+| Name | Kind | Purpose |
+| --- | --- | --- |
+| `SuperKernel\Attribute\Provider` | Attribute | Maps an identifier to the annotated class; a class mapped to itself becomes a shared class. |
+| `SuperKernel\Attribute\FactoryProvider` | Attribute | Creates an identifier by calling the annotated class's `__invoke()`, whose parameters are injected. |
+| `SuperKernel\Attribute\Autowired` | Attribute | Injects a property after the constructor returns. |
+| `SuperKernel\Attribute\PropertyHandler` | Attribute | Registers the handler of a custom property Attribute. |
+| `SuperKernel\Contract\PropertyAttributeHandlerInterface` | Interface | Implemented by a property handler. |
+| `SuperKernel\Contract\PropertyContextInterface` | Interface | Passed to a property handler to inspect the property and assign its value. |
+| `SuperKernel\Attribute\Definer` | Attribute | Registers a definer with a priority. |
+| `SuperKernel\Di\Contract\DefinerInterface` | Interface | Implemented by a definer, which turns an identifier into a definition. |
+| `SuperKernel\Di\Contract\DefinitionInterface` | Interface | Implemented by a definition. |
+| `SuperKernel\Attribute\Resolver` | Attribute | Registers a resolver with a priority. |
+| `SuperKernel\Di\Contract\ResolverInterface` | Interface | Implemented by a resolver, which turns a definition into a value. |
+| `SuperKernel\Di\Contract\DefinitionFactoryInterface` | Interface | Obtains the definition of an identifier from the container. |
+| `SuperKernel\Di\Contract\ResolverFactoryInterface` | Interface | Resolves a definition without sharing the result. |
+| `SuperKernel\Di\Container` | Class | The container; `new Container($collector, $entries)` creates one from an annotation collector. |
+| `SuperKernel\Di\Provider\ContainerProvider` | Class | Restores the root container from the metadata of `skernel build`. |
 
-- `#[Definer(priority: N)]` marks an instantiable `SuperKernel\Di\Contract\DefinerInterface`. It has no required constructor parameter or requires only `AnnotationCollectorInterface`. The built-in definers are Provider `200`, FactoryProvider `100`, and Class `0`. Definitions and unsupported identifiers are cached per identifier.
-- `#[Resolver(priority: N)]` marks a `SuperKernel\Di\Contract\ResolverInterface`, constructed with `SuperKernel\Contract\ContainerInterface`. The built-in resolvers are Factory `400`, Provider `300`, Class `200`, Property `100`, and Method `0`; a priority above `400` precedes them all. A resolver performs nested work by passing derived definitions to the container's `ResolverFactoryInterface`, not by calling another resolver. Priority selects the resolver for a definition; it does not order constructor or property injection.
-- Both factories discover their definers and resolvers on first use. If an extension's constructor may yield a coroutine, perform the first lookup before sharing the container with concurrent work.
+## Behavior to know
 
-## Creating a container
+- Run `skernel build` after `composer install` or `composer update` and after changing autoload rules or annotated classes, or start with `skernel run`, which builds first. When the metadata is missing or outdated, `ContainerProvider` raises `SuperKernel\Metadata\Exception\BuildRequiredException`, whose message ends with ``Run `skernel build` to generate the project metadata.`` A changed annotated class is not detected; the container keeps using the metadata of the last build.
+- `get()` raises `SuperKernel\Di\Exception\NotFoundException`, a PSR-11 not-found exception, for an identifier without a definition, and `SuperKernel\Di\Exception\ResolutionException`, a PSR-11 container exception, for every other failure, with the original exception as its previous one. PSR-11 exceptions thrown by your constructors and factories pass through unchanged.
+- An invalid declaration, such as two providers for one identifier, is reported at the first lookup that needs it, not by `skernel build`. Two providers for one identifier make every lookup of an entry not yet created fail.
+- `has()` never creates an entry: it reports whether an identifier is kept or has a definition, and reports `false` when finding the definition fails.
+- The first value created for an identifier is kept for the life of the container; a class or interface identifier must resolve to an instance of that type.
+- A property is injected after the constructor returns, so the constructor cannot use it. A lazy property holds a proxy, which is not identical (`===`) to the container's entry.
+- A circular dependency ends the process with a fatal error.
 
-```php
-use SuperKernel\Contract\AnnotationCollectorInterface;
-use SuperKernel\Di\Container;
+## Documentation
 
-/** @var AnnotationCollectorInterface $annotationCollector */
-$container = new Container($annotationCollector);
-```
+The developer documentation explains every capability with complete examples, the errors and their messages, and what not to do: [SuperKernel DI](https://github.com/super-kernel/.github/blob/main/docs/components/di.md).
 
-Every container reserves these entries, which take precedence over supplied ones:
+## License
 
-- `Container::class`, `SuperKernel\Contract\ContainerInterface`, and `Psr\Container\ContainerInterface` return the container itself;
-- `AnnotationCollectorInterface` returns the supplied collector;
-- `DefinitionFactoryInterface`, `DefinitionFactory::class`, `ResolverFactoryInterface`, and `ResolverFactory::class` return the container's own factories.
-
-`new Container($annotationCollector, $entries)` also retains supplied services, including non-class identifiers and null values; class and interface identifiers must hold compatible instances.
-
-`SuperKernel\Di\Provider\ContainerProvider` is the factory provider for both container interfaces. Invoked with a container, it returns that container unchanged. Invoked without one, it restores the package metadata and annotation records that `skernel build` generated, through `super-kernel/metadata` and `super-kernel/annotator`, and returns a new root. It never scans sources or reads Composer files, so run `skernel build` after installing dependencies and after changing autoload rules or annotated classes, or start the application with `skernel run`, which builds first. Missing, invalid, or out-of-date artifacts raise `SuperKernel\Metadata\Exception\BuildRequiredException`, whose message ends with ``Run `skernel build` to generate the project metadata.`` The same restoration works from a moved project and inside a Phar. Skipped-class diagnostics are printed by `skernel build`, not at startup.
-
-A bootstrapped root also retains these services under their interfaces and concrete classes: `AnnotationCollectorInterface`, `BasePathInterface`, `PackageManagerInterface`, `ReflectorInterface`, and `VendorDirInterface` from `SuperKernel\Contract`. Inject `VendorDirInterface` for the dependency directory; `PackageManagerInterface` does not expose it.
-
-## Lookups and errors
-
-- `get()` raises the PSR not-found exception for an identifier without a definition, and a PSR container exception when no resolver supports a known definition. PSR container exceptions from constructors and factories pass through unchanged; other failures are wrapped with the original as the cause.
-- `has()` never resolves: it reports retained entries and identifiers with a definition, and a failing definition lookup reports `false`.
-- For a class or interface identifier, the first resolved value must be a compatible instance. The first retained value for an identifier is never replaced.
-- Circular dependencies are not detected and must not be declared. Concurrent first lookups of the same identifier may construct duplicates; the first completed value is retained.
-
-## Caller-owned resolution
-
-Resolve a definition without retaining the top-level result:
-
-```php
-use RuntimeException;
-use SuperKernel\Di\Contract\DefinitionFactoryInterface;
-use SuperKernel\Di\Contract\ResolverFactoryInterface;
-
-/** @var DefinitionFactoryInterface $definitionFactory */
-$definitionFactory = $container->get(DefinitionFactoryInterface::class);
-/** @var ResolverFactoryInterface $resolverFactory */
-$resolverFactory = $container->get(ResolverFactoryInterface::class);
-
-$definition = $definitionFactory->get(ApplicationService::class)
-    ?? throw new RuntimeException('ApplicationService has no definition.');
-
-$callerOwnedService = $resolverFactory->resolve($definition);
-```
-
-This is not a transient scope: dependencies requested during that resolution still come from the shared container and may be retained there.
+Released under the MIT License. See [LICENSE](LICENSE).
