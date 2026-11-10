@@ -7,18 +7,18 @@
         "php": ">=8.4.27 <8.5",
         "psr/container": "^2.0.2",
         "psr/log": "^3.0.2",
-        "super-kernel/annotator": "dev-main",
-        "super-kernel/attribute": "dev-main",
-        "super-kernel/composer": "dev-main",
-        "super-kernel/contract": "dev-main",
-        "super-kernel/reflector": "dev-main",
-        "super-kernel/scan-isolation": "dev-main",
-        "super-kernel/tokenizer": "dev-main"
+        "super-kernel/annotator": "self.version",
+        "super-kernel/attribute": "self.version",
+        "super-kernel/composer": "self.version",
+        "super-kernel/contract": "self.version",
+        "super-kernel/reflector": "self.version",
+        "super-kernel/scan-isolation": "self.version",
+        "super-kernel/tokenizer": "self.version"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.95.27",
         "phpunit/phpunit": "^13.4.5",
-        "super-kernel/logger": "dev-main"
+        "super-kernel/logger": "self.version"
     },
     "provide": {
         "psr/container-implementation": "2.0"
