@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Resolver;
 
 use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionUnionType;
 use SuperKernel\Attribute\Resolver;
 use SuperKernel\Contract\ContainerInterface;
-use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 use SuperKernel\Di\Definition\MethodDefinition;
@@ -127,20 +127,9 @@ final readonly class MethodResolver implements ResolverInterface
 
             $candidates = array_values(array_unique($candidates));
             $available = [];
-            $lookupFailure = null;
-            $definitionFactory = $this->container->get(DefinitionFactoryInterface::class);
 
             foreach ($candidates as $candidate) {
-                // Look the definition up directly so that a failure, such as a type that fails to load, stays the
-                // cause of an unresolvable parameter instead of becoming a false has() result.
-                try {
-                    $defined = $definitionFactory->get($candidate) instanceof DefinitionInterface;
-                } catch (Throwable $throwable) {
-                    $defined = false;
-                    $lookupFailure ??= $throwable;
-                }
-
-                if ($defined || $this->container->has($candidate)) {
+                if ($this->container->has($candidate)) {
                     $available[] = $candidate;
                 }
             }
@@ -172,6 +161,22 @@ final readonly class MethodResolver implements ResolverInterface
                 $arguments[] = null;
 
                 continue;
+            }
+
+            // has() reports a failed lookup, such as a type that fails to load, as false; get() raises it, so the
+            // first failure other than not-found becomes the cause of the unresolvable parameter.
+            $lookupFailure = null;
+
+            foreach ($candidates as $candidate) {
+                try {
+                    $this->container->get($candidate);
+                } catch (NotFoundExceptionInterface) {
+                    continue;
+                } catch (Throwable $throwable) {
+                    $lookupFailure = $throwable;
+
+                    break;
+                }
             }
 
             throw ResolutionException::unresolvableParameter(
