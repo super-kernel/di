@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SuperKernel\Di\Resolver;
 
 use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionUnionType;
@@ -162,11 +163,28 @@ final readonly class MethodResolver implements ResolverInterface
                 continue;
             }
 
+            // has() reports a failed lookup, such as a type that fails to load, as false; get() raises it, so the
+            // first failure other than not-found becomes the cause of the unresolvable parameter.
+            $lookupFailure = null;
+
+            foreach ($candidates as $candidate) {
+                try {
+                    $this->container->get($candidate);
+                } catch (NotFoundExceptionInterface) {
+                    continue;
+                } catch (Throwable $throwable) {
+                    $lookupFailure = $throwable;
+
+                    break;
+                }
+            }
+
             throw ResolutionException::unresolvableParameter(
                 $class->getName(),
                 $method->getName(),
                 $parameter->getName(),
                 null === $type ? null : (string)$type,
+                $lookupFailure,
             );
         }
 
