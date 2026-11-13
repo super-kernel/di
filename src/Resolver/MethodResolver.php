@@ -10,6 +10,7 @@ use ReflectionNamedType;
 use ReflectionUnionType;
 use SuperKernel\Attribute\Resolver;
 use SuperKernel\Contract\ContainerInterface;
+use SuperKernel\Di\Contract\DefinitionFactoryInterface;
 use SuperKernel\Di\Contract\DefinitionInterface;
 use SuperKernel\Di\Contract\ResolverInterface;
 use SuperKernel\Di\Definition\MethodDefinition;
@@ -126,9 +127,20 @@ final readonly class MethodResolver implements ResolverInterface
 
             $candidates = array_values(array_unique($candidates));
             $available = [];
+            $lookupFailure = null;
+            $definitionFactory = $this->container->get(DefinitionFactoryInterface::class);
 
             foreach ($candidates as $candidate) {
-                if ($this->container->has($candidate)) {
+                // Look the definition up directly so that a failure, such as a type that fails to load, stays the
+                // cause of an unresolvable parameter instead of becoming a false has() result.
+                try {
+                    $defined = $definitionFactory->get($candidate) instanceof DefinitionInterface;
+                } catch (Throwable $throwable) {
+                    $defined = false;
+                    $lookupFailure ??= $throwable;
+                }
+
+                if ($defined || $this->container->has($candidate)) {
                     $available[] = $candidate;
                 }
             }
@@ -167,6 +179,7 @@ final readonly class MethodResolver implements ResolverInterface
                 $method->getName(),
                 $parameter->getName(),
                 null === $type ? null : (string)$type,
+                $lookupFailure,
             );
         }
 

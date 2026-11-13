@@ -233,10 +233,11 @@ final class ResolutionException extends ContainerException
     }
 
     public static function unresolvableParameter(
-        string  $class,
-        string  $method,
-        string  $parameter,
-        ?string $type,
+        string     $class,
+        string     $method,
+        string     $parameter,
+        ?string    $type,
+        ?Throwable $previous = null,
     ): self
     {
         return new self(sprintf(
@@ -245,7 +246,7 @@ final class ResolutionException extends ContainerException
             $method,
             $parameter,
             null === $type ? '' : sprintf(' of type %s', $type),
-        ));
+        ), 0, $previous);
     }
 
     /**
